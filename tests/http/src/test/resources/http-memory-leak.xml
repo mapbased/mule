@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:httpn="http://www.mulesoft.org/schema/mule/httpn"
+      xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+      xmlns="http://www.mulesoft.org/schema/mule/core"
+      xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/httpn http://www.mulesoft.org/schema/mule/httpn/current/mule-httpn.xsd
+        http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+
+
+    <httpn:listener-config name="listenerConfigPort1">
+        <httpn:listener-connection host="localhost" port="8081"/>
+    </httpn:listener-config>
+
+    <httpn:request-config name="requestConfig">
+        <httpn:request-connection host="localhost" port="${port1}"/>
+    </httpn:request-config>
+
+    <flow name="main-http">
+        <httpn:listener config-ref="listenerConfigPort1" path="/*" responseStreamingMode="ALWAYS"/>
+        <echo-component />
+    </flow>
+
+    <flow name="client">
+        <httpn:request path="/test" config-ref="requestConfig" requestStreamingMode="ALWAYS" responseTimeout="999999999" sendBodyMode="ALWAYS">
+            <!--<httpn:headers>-->
+                <!--#[mel:['CusTomName2' : 'CustomValue']]-->
+            <!--</httpn:headers>-->
+            <httpn:body>
+                #[payload]
+            </httpn:body>
+        </httpn:request>
+    </flow>
+</mule>

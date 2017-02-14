@@ -17,13 +17,13 @@ import org.mule.runtime.api.streaming.CursorStream;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.EventContext;
 import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.internal.streaming.bytes.factory.FileStoreCursorStreamProviderFactory;
+import org.mule.runtime.core.internal.streaming.bytes.factory.InMemoryCursorStreamProviderFactory;
+import org.mule.runtime.core.internal.streaming.bytes.factory.NullCursorStreamProviderFactory;
 import org.mule.runtime.core.streaming.bytes.ByteStreamingStatistics;
 import org.mule.runtime.core.streaming.bytes.CursorStreamProviderFactory;
 import org.mule.runtime.core.streaming.bytes.FileStoreCursorStreamConfig;
 import org.mule.runtime.core.streaming.bytes.InMemoryCursorStreamConfig;
-import org.mule.runtime.core.internal.streaming.bytes.factory.FileStoreCursorStreamProviderFactory;
-import org.mule.runtime.core.internal.streaming.bytes.factory.InMemoryCursorStreamProviderFactory;
-import org.mule.runtime.core.internal.streaming.bytes.factory.NullCursorStreamProviderFactory;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -228,7 +228,10 @@ public class DefaultByteStreamingManager implements ByteStreamingManagerAdapter,
         } else {
           for (Map.Entry<CursorStreamProviderAdapter, List<CursorStreamAdapter>> entry : cursors.asMap().entrySet()) {
             closeProvider(entry.getKey());
-            allCursorsClosed = allCursorsClosed && entry.getValue().stream().anyMatch(CursorStream::isClosed);
+            //List<CursorStreamAdapter> cursors = entry.getValue();
+            //if (!cursors.isEmpty()) {
+              allCursorsClosed = allCursorsClosed && entry.getValue().stream().anyMatch(CursorStream::isClosed);
+            //}
           }
         }
 
