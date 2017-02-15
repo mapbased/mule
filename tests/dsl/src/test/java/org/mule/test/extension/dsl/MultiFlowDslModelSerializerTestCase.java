@@ -19,6 +19,7 @@ import org.mule.runtime.config.spring.dsl.model.DslElementModel;
 import org.mule.runtime.config.spring.dsl.model.XmlDslElementModelConverter;
 import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.extension.api.dsl.syntax.resolver.DslSyntaxResolver;
+import org.mule.test.runner.ArtifactClassLoaderRunnerConfig;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
 
+@ArtifactClassLoaderRunnerConfig(plugins = {"org.mule.modules:mule-module-jms"})
 public class MultiFlowDslModelSerializerTestCase extends AbstractElementModelTestCase {
 
   public static final String SEND_PAYLOAD_FLOW = "send-payload";

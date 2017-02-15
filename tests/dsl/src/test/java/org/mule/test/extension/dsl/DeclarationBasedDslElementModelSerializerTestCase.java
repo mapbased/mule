@@ -13,6 +13,8 @@ import static org.mule.runtime.api.app.declaration.fluent.ElementDeclarer.newObj
 import static org.mule.runtime.core.util.IOUtils.getResourceAsString;
 import static org.mule.runtime.extension.api.ExtensionConstants.RECONNECTION_STRATEGY_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.ExtensionConstants.REDELIVERY_POLICY_PARAMETER_NAME;
+import static org.mule.runtime.extension.api.ExtensionConstants.STREAMING_STRATEGY_PARAMETER_NAME;
+import static org.mule.runtime.extension.api.ExtensionConstants.TARGET_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.ExtensionConstants.TLS_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.declaration.type.ReconnectionStrategyTypeBuilder.BLOCKING;
 import static org.mule.runtime.extension.api.declaration.type.ReconnectionStrategyTypeBuilder.COUNT;
@@ -20,6 +22,7 @@ import static org.mule.runtime.extension.api.declaration.type.ReconnectionStrate
 import static org.mule.runtime.extension.api.declaration.type.ReconnectionStrategyTypeBuilder.RECONNECT_ALIAS;
 import static org.mule.runtime.extension.api.declaration.type.RedeliveryPolicyTypeBuilder.MAX_REDELIVERY_COUNT;
 import static org.mule.runtime.extension.api.declaration.type.RedeliveryPolicyTypeBuilder.USE_SECURE_HASH;
+import static org.mule.runtime.extension.api.declaration.type.StreamingStrategyTypeBuilder.IN_MEMORY_STREAM_ALIAS;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.compareXML;
 import org.mule.runtime.api.app.declaration.ArtifactDeclaration;
 import org.mule.runtime.api.app.declaration.FlowElementDeclaration;
@@ -35,7 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
 
-public class DeclarationBasedDslElementModelSerializerTestCase extends AbstractElementModelTestCase {
+public class DeclarationBasedDslElementModelSerializerTestCase extends ConfigsIntegrationAbstractTestCase {
 
   private String expectedAppXml;
   private ArtifactDeclaration applicationDeclaration;
@@ -55,6 +58,7 @@ public class DeclarationBasedDslElementModelSerializerTestCase extends AbstractE
 
     ElementDeclarer db = ElementDeclarer.forExtension("Database");
     ElementDeclarer http = ElementDeclarer.forExtension("HTTP");
+    ElementDeclarer sockets = ElementDeclarer.forExtension("Sockets");
 
     applicationDeclaration = newArtifact()
         .withConfig(db.newConfiguration("config")
@@ -160,7 +164,14 @@ public class DeclarationBasedDslElementModelSerializerTestCase extends AbstractE
                                    .build())
                 .withParameter("inputParameters", "#[mel:['description' : payload]]")
                 .getDeclaration())
-            .getDeclaration())
+                    .withComponent(db.newOperation("sendAndReceive")
+                                     .withParameter(TARGET_PARAMETER_NAME, "myVar")
+                                     .withParameter(STREAMING_STRATEGY_PARAMETER_NAME,
+                                                    newObjectValue()
+                                                      .ofType(IN_MEMORY_STREAM_ALIAS)
+                                                      .build())
+                                     .getDeclaration())
+                    .getDeclaration())
         .getDeclaration();
   }
 

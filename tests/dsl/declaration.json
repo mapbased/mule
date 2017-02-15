@@ -1,0 +1,231 @@
+{
+  "globalParameters": [],
+  "configs": [
+    {
+      "connection": {
+        "parameters": [
+          {
+            "poolingProfile": {
+              "disabled": "false",
+              "typeId": "org.mule.runtime.api.config.PoolingProfile"
+            }
+          }
+        ],
+        "name": "connection",
+        "declaringExtension": "JMS"
+      },
+      "elementName": "config",
+      "parameters": [],
+      "name": "config",
+      "declaringExtension": "FTP"
+    },
+    {
+      "connection": {
+        "parameters": [
+          {
+            "poolingProfile": {
+              "disabled": "false",
+              "typeId": "org.mule.runtime.api.config.PoolingProfile"
+            }
+          }
+        ],
+        "name": "active-mq-connection",
+        "declaringExtension": "JMS"
+      },
+      "elementName": "config",
+      "parameters": [],
+      "name": "config",
+      "declaringExtension": "JMS"
+    },
+    {
+      "connection": {
+        "parameters": [
+          {
+            "poolingProfile": {
+              "maxPoolSize": "10"
+            }
+          },
+          {
+            "connectionProperties": {
+              "first": "propertyOne",
+              "second": "propertyTwo"
+            }
+          },
+          {
+            "database": "target/muleEmbeddedDB"
+          },
+          {
+            "create": "true"
+          }
+        ],
+        "name": "derby-connection",
+        "declaringExtension": "Database"
+      },
+      "elementName": "dbConfig",
+      "parameters": [],
+      "name": "config",
+      "declaringExtension": "Database"
+    },
+    {
+      "connection": {
+        "parameters": [
+          {
+            "tlsContext": {
+              "key-store": {
+                "path": "ssltest-keystore.jks",
+                "password": "changeit",
+                "keyPassword": "changeit"
+              }
+            }
+          },
+          {
+            "host": "localhost"
+          },
+          {
+            "port": "49019"
+          },
+          {
+            "protocol": "HTTPS"
+          }
+        ],
+        "name": "listener-connection",
+        "declaringExtension": "HTTP"
+      },
+      "elementName": "httpListener",
+      "parameters": [
+        {
+          "basePath": "/"
+        }
+      ],
+      "name": "listener-config",
+      "declaringExtension": "HTTP"
+    },
+    {
+      "connection": {
+        "parameters": [
+          {
+            "host": "localhost"
+          },
+          {
+            "port": "49020"
+          },
+          {
+            "authentication": {
+              "password": "pass",
+              "username": "user",
+              "typeId": "org.mule.extension.http.api.request.authentication.BasicAuthentication"
+            }
+          },
+          {
+            "clientSocketProperties": {
+              "keepAlive": "true",
+              "receiveBufferSize": "1024",
+              "linger": "1000",
+              "sendBufferSize": "1024",
+              "clientTimeout": "1000",
+              "connectionTimeout": "1000"
+            }
+          }
+        ],
+        "name": "request-connection",
+        "declaringExtension": "HTTP"
+      },
+      "elementName": "httpRequester",
+      "parameters": [],
+      "name": "request-config",
+      "declaringExtension": "HTTP"
+    }
+  ],
+  "flows": [
+    {
+      "components": [
+        {
+          "configRef": "httpListener",
+          "parameters": [
+            {
+              "path": "testBuilder"
+            },
+            {
+              "redeliveryPolicy": {
+                "useSecureHash": "true",
+                "maxRedeliveryCount": "2"
+              }
+            },
+            {
+              "reconnectionStrategy": {
+                "blocking": "true",
+                "count": "1",
+                "frequency": "0",
+                "typeId": "reconnect"
+              }
+            },
+            {
+              "response": {
+                "headers": "#[mel:[\u0027content-type\u0027 : \u0027text/plain\u0027]]"
+              }
+            }
+          ],
+          "name": "listener",
+          "declaringExtension": "HTTP"
+        },
+        {
+          "parameters": [
+            {
+              "sql": "INSERT INTO PLANET(POSITION, NAME) VALUES (:position, :name)"
+            },
+            {
+              "parameterTypes": [
+                {
+                  "type": "VARCHAR",
+                  "key": "name"
+                },
+                {
+                  "type": "INTEGER",
+                  "key": "position"
+                }
+              ]
+            }
+          ],
+          "name": "bulkInsert",
+          "declaringExtension": "Database"
+        },
+        {
+          "configRef": "httpRequester",
+          "parameters": [
+            {
+              "path": "/nested"
+            },
+            {
+              "method": "POST"
+            }
+          ],
+          "name": "request",
+          "declaringExtension": "HTTP"
+        },
+        {
+          "configRef": "dbConfig",
+          "parameters": [
+            {
+              "sql": "INSERT INTO PLANET(POSITION, NAME, DESCRIPTION) VALUES (777, \u0027Pluto\u0027, :description)"
+            },
+            {
+              "parameterTypes": [
+                {
+                  "type": "CLOB",
+                  "key": "description"
+                }
+              ]
+            },
+            {
+              "inputParameters": "#[mel:[\u0027description\u0027 : payload]]"
+            }
+          ],
+          "name": "insert",
+          "declaringExtension": "Database"
+        }
+      ],
+      "name": "testFlow",
+      "initialState": "stopped"
+    }
+  ]
+}

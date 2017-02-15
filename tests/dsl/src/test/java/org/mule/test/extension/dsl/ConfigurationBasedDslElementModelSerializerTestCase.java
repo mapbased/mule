@@ -9,8 +9,8 @@ package org.mule.test.extension.dsl;
 import static org.mule.runtime.api.dsl.DslConstants.REDELIVERY_POLICY_ELEMENT_IDENTIFIER;
 import static org.mule.runtime.core.util.IOUtils.getResourceAsString;
 import static org.mule.test.module.extension.internal.util.ExtensionsTestUtils.compareXML;
-import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.mule.runtime.config.spring.dsl.model.XmlDslElementModelConverter;
+import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 
 import java.io.IOException;
 
@@ -18,7 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Element;
 
-public class ConfigurationBasedDslElementModelSerializerTestCase extends AbstractElementModelTestCase {
+public class ConfigurationBasedDslElementModelSerializerTestCase extends ConfigsIntegrationAbstractTestCase {
 
   private Element flow;
   private String expectedAppXml;

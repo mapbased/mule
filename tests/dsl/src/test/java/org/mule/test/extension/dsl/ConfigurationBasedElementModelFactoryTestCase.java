@@ -27,7 +27,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ConfigurationBasedElementModelFactoryTestCase extends AbstractElementModelTestCase {
+public class ConfigurationBasedElementModelFactoryTestCase extends ConfigsIntegrationAbstractTestCase {
 
   @Before
   public void initApp() throws Exception {

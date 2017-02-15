@@ -37,7 +37,7 @@ import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DeclarationBasedElementModelFactoryTestCase extends AbstractElementModelTestCase {
+public class DeclarationBasedElementModelFactoryTestCase extends ConfigsIntegrationAbstractTestCase {
 
   private ConfigurationElementDeclaration dbConfig;
   private ConfigurationElementDeclaration listenerConfig;

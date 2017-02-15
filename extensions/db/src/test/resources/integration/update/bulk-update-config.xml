@@ -24,7 +24,7 @@
         <db:select target="select">
             <db:sql>select * from PLANET</db:sql>
         </db:select>
-
+        <logger level="ERROR" message="#[select]"/>
         <db:bulk-update>
             <db:sql>update PLANET set NAME='Mercury' where NAME= :name</db:sql>
         </db:bulk-update>

@@ -30,7 +30,6 @@ import org.mule.runtime.config.spring.dsl.processor.ConfigLine;
 import org.mule.runtime.config.spring.dsl.processor.xml.XmlApplicationParser;
 import org.mule.runtime.core.registry.SpiServiceRegistry;
 import org.mule.runtime.dsl.api.component.config.ComponentConfiguration;
-import org.mule.test.runner.ArtifactClassLoaderRunnerConfig;
 
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -49,15 +48,6 @@ import org.junit.Before;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-@ArtifactClassLoaderRunnerConfig(
-    sharedRuntimeLibs = {"org.apache.derby:derby"},
-    plugins = {
-        "org.mule.modules:mule-module-sockets",
-        "org.mule.modules:mule-module-http-ext",
-        "org.mule.modules:mule-module-db",
-        "org.mule.modules:mule-module-jms",
-        "com.mulesoft.weave:mule-plugin-weave"},
-    providedInclusions = "org.mule.modules:mule-module-sockets")
 public abstract class AbstractElementModelTestCase extends MuleArtifactFunctionalTestCase {
 
   protected static final String DB_CONFIG = "dbConfig";
@@ -75,11 +65,6 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
   protected DslElementModelFactory modelResolver;
   protected ApplicationModel applicationModel;
   protected Document doc;
-
-  @Override
-  protected String getConfigFile() {
-    return "integration-multi-config-dsl-app.xml";
-  }
 
   @Before
   public void setup() throws Exception {
@@ -160,9 +145,8 @@ public abstract class AbstractElementModelTestCase extends MuleArtifactFunctiona
     InputStream appIs = Thread.currentThread().getContextClassLoader().getResourceAsStream(getConfigFile());
     checkArgument(appIs != null, "The given application was not found as resource");
 
-    Document document = new XmlConfigurationDocumentLoader().loadDocument(
-                                                                          of(muleContext.getExtensionManager()), getConfigFile(),
-                                                                          appIs);
+    Document document = new XmlConfigurationDocumentLoader()
+        .loadDocument(of(muleContext.getExtensionManager()), getConfigFile(), appIs);
 
     ConfigLine configLine = new XmlApplicationParser(new SpiServiceRegistry())
         .parse(document.getDocumentElement())
