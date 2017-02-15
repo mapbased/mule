@@ -7,16 +7,17 @@
 
 package org.mule.runtime.module.artifact.classloader;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Collections.unmodifiableSet;
 import static org.apache.commons.lang3.builder.ToStringBuilder.reflectionToString;
 import static org.apache.commons.lang3.builder.ToStringStyle.MULTI_LINE_STYLE;
-import static org.mule.runtime.api.util.Preconditions.checkArgument;
-import org.mule.runtime.core.util.StringUtils;
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptor;
 
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Filters classes and resources using a {@link ArtifactDescriptor} describing exported/blocked names.

@@ -7,15 +7,14 @@
 
 package org.mule.runtime.module.artifact.classloader;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Boolean.valueOf;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.lang.System.identityHashCode;
 import static java.util.Collections.emptyList;
-import static org.mule.runtime.core.api.config.MuleProperties.MULE_LOG_VERBOSE_CLASSLOADING;
-import static org.mule.runtime.api.util.Preconditions.checkArgument;
-
+import static org.mule.runtime.module.artifact.classloader.MuleArtifactClassLoader.MULE_LOG_VERBOSE_CLASSLOADING;
 import org.mule.runtime.module.artifact.classloader.exception.NotExportedClassException;
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptor;
 
@@ -35,7 +34,7 @@ public class FilteringArtifactClassLoader extends ClassLoader implements Artifac
     registerAsParallelCapable();
   }
 
-  protected static final Logger logger = LoggerFactory.getLogger(FilteringArtifactClassLoader.class);
+  private static final Logger logger = LoggerFactory.getLogger(FilteringArtifactClassLoader.class);
 
   private final ArtifactClassLoader artifactClassLoader;
   private final ClassLoaderFilter filter;

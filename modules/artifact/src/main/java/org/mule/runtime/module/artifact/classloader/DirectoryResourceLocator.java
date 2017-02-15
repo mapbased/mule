@@ -6,9 +6,6 @@
  */
 package org.mule.runtime.module.artifact.classloader;
 
-import org.mule.runtime.api.exception.MuleRuntimeException;
-import org.mule.runtime.core.config.i18n.CoreMessages;
-
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,8 +26,7 @@ public class DirectoryResourceLocator implements LocalResourceLocator {
           try {
             return resourceFile.toURI().toURL();
           } catch (MalformedURLException e) {
-            throw new MuleRuntimeException(CoreMessages
-                .createStaticMessage(String.format("Can not load resource with name %s.", resourceName)), e);
+            throw new RuntimeException(String.format("Can not load resource with name %s.", resourceName), e);
           }
         }
       }

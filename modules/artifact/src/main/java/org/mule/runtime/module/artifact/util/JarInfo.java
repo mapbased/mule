@@ -7,7 +7,7 @@
 
 package org.mule.runtime.module.artifact.util;
 
-import static org.mule.runtime.api.util.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Set;
 

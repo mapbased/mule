@@ -7,8 +7,8 @@
 
 package org.mule.runtime.module.artifact.descriptor;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Arrays.asList;
-import static org.mule.runtime.api.util.Preconditions.checkArgument;
 
 import java.net.URL;
 import java.util.ArrayList;

@@ -32,6 +32,7 @@
         <module>management</module>
         <module>reboot</module>
         <module>schedulers</module>
+        <module>serializer</module>
         <module>scripting</module>
         <module>scripting-jruby</module>
         <module>spring-config</module>

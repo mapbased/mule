@@ -25,7 +25,7 @@ import org.mule.runtime.module.artifact.classloader.ArtifactClassLoader;
 import org.mule.runtime.module.artifact.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.classloader.net.MuleArtifactUrlStreamHandler;
 import org.mule.runtime.module.artifact.classloader.net.MuleUrlStreamHandlerFactory;
-import org.mule.runtime.module.artifact.serializer.ArtifactObjectSerializer;
+import org.mule.runtime.module.serializer.ArtifactObjectSerializer;
 import org.mule.runtime.module.service.DefaultServiceDiscoverer;
 import org.mule.runtime.module.service.MuleServiceManager;
 import org.mule.runtime.module.service.ReflectionServiceProviderResolutionHelper;

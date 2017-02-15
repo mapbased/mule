@@ -10,7 +10,7 @@ import static java.lang.Boolean.valueOf;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.lang.System.lineSeparator;
-import static org.mule.runtime.core.api.config.MuleProperties.MULE_LOG_VERBOSE_CLASSLOADING;
+import static org.mule.runtime.module.artifact.classloader.MuleArtifactClassLoader.MULE_LOG_VERBOSE_CLASSLOADING;
 
 import org.mule.runtime.module.artifact.classloader.ClassLoaderFilter;
 import org.mule.runtime.module.artifact.classloader.FilteringArtifactClassLoader;

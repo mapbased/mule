@@ -5,7 +5,7 @@
  * LICENSE.txt file.
  */
 
-package org.mule.runtime.module.artifact.serializer;
+package org.mule.runtime.module.serializer;
 
 import org.mule.runtime.module.artifact.classloader.ClassLoaderRepository;
 
