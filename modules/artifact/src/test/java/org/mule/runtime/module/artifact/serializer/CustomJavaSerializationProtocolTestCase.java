@@ -5,7 +5,7 @@
  * LICENSE.txt file.
  */
 
-package org.mule.runtime.module.serializer;
+package org.mule.runtime.module.artifact.serializer;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;

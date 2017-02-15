@@ -6,8 +6,10 @@
  */
 package org.mule.runtime.module.artifact.classloader.net;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import org.mule.runtime.core.util.ClassUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
@@ -15,10 +17,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import org.apache.commons.lang.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A factory for loading URL protocol handlers. This factory is necessary to make Mule work in cases where the standard approach
@@ -87,7 +85,7 @@ public class MuleUrlStreamHandlerFactory extends Object implements URLStreamHand
       String packagePrefix = tokenizer.nextToken().trim();
       String className = packagePrefix + "." + protocol + ".Handler";
       try {
-        handler = (URLStreamHandler) instanciateClass(className);
+        handler = (URLStreamHandler) ClassUtils.instanciateClass(className);
       } catch (Exception ex) {
         // not much we can do here
       }
@@ -95,97 +93,4 @@ public class MuleUrlStreamHandlerFactory extends Object implements URLStreamHand
 
     return handler;
   }
-
-  public static <T> T instanciateClass(Class<? extends T> clazz, Object... constructorArgs) throws SecurityException,
-      NoSuchMethodException, IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-    Class<?>[] args;
-    if (constructorArgs != null) {
-      args = new Class[constructorArgs.length];
-      for (int i = 0; i < constructorArgs.length; i++) {
-        if (constructorArgs[i] == null) {
-          args[i] = null;
-        } else {
-          args[i] = constructorArgs[i].getClass();
-        }
-      }
-    } else {
-      args = new Class[0];
-    }
-
-    // try the arguments as given
-    // Constructor ctor = clazz.getConstructor(args);
-    Constructor<?> ctor = getConstructor(clazz, args, false);
-
-    if (ctor == null) {
-      // try again but adapt value classes to primitives
-      ctor = getConstructor(clazz, ClassUtils.wrappersToPrimitives(args), false);
-    }
-
-    if (ctor == null) {
-      StringBuilder argsString = new StringBuilder(100);
-      for (Class<?> arg : args) {
-        argsString.append(arg.getName()).append(", ");
-      }
-      throw new NoSuchMethodException("could not find constructor on class: " + clazz + ", with matching arg params: "
-          + argsString);
-    }
-
-    return (T) ctor.newInstance(constructorArgs);
-  }
-
-  public static Object instanciateClass(String name, Object... constructorArgs) throws ClassNotFoundException, SecurityException,
-      NoSuchMethodException, IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-    return instanciateClass(name, constructorArgs, (ClassLoader) null);
-  }
-
-  public static Object instanciateClass(String name, Object[] constructorArgs, Class<?> callingClass)
-      throws ClassNotFoundException, SecurityException, NoSuchMethodException, IllegalArgumentException, InstantiationException,
-      IllegalAccessException, InvocationTargetException {
-    Class<?> clazz = ClassUtils.getClass(callingClass.getClassLoader(), name);
-    return instanciateClass(clazz, constructorArgs);
-  }
-
-  public static Object instanciateClass(String name, Object[] constructorArgs, ClassLoader classLoader)
-      throws ClassNotFoundException, SecurityException, NoSuchMethodException, IllegalArgumentException, InstantiationException,
-      IllegalAccessException, InvocationTargetException {
-    Class<?> clazz;
-    if (classLoader != null) {
-      clazz = ClassUtils.getClass(classLoader, name);
-    } else {
-      clazz = ClassUtils.getClass(ClassUtils.class.getClassLoader(), name);
-    }
-    if (clazz == null) {
-      throw new ClassNotFoundException(name);
-    }
-    return instanciateClass(clazz, constructorArgs);
-  }
-
-  public static Constructor getConstructor(Class clazz, Class[] paramTypes, boolean exactMatch) {
-    for (Constructor ctor : clazz.getConstructors()) {
-      Class[] types = ctor.getParameterTypes();
-      if (types.length == paramTypes.length) {
-        int matchCount = 0;
-        for (int x = 0; x < types.length; x++) {
-          if (paramTypes[x] == null) {
-            matchCount++;
-          } else {
-            if (exactMatch) {
-              if (paramTypes[x].equals(types[x]) || types[x].equals(paramTypes[x])) {
-                matchCount++;
-              }
-            } else {
-              if (paramTypes[x].isAssignableFrom(types[x]) || types[x].isAssignableFrom(paramTypes[x])) {
-                matchCount++;
-              }
-            }
-          }
-        }
-        if (matchCount == types.length) {
-          return ctor;
-        }
-      }
-    }
-    return null;
-  }
-
 }

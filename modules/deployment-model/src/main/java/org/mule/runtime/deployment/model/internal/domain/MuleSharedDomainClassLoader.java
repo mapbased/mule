@@ -20,9 +20,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Defines a {@link MuleArtifactClassLoader} for a domain artifact.
  */
@@ -31,8 +28,6 @@ public class MuleSharedDomainClassLoader extends MuleArtifactClassLoader impleme
   static {
     registerAsParallelCapable();
   }
-
-  private Logger logger = LoggerFactory.getLogger(getClass());
 
   public MuleSharedDomainClassLoader(ArtifactDescriptor artifactDescriptor, ClassLoader parent,
                                      ClassLoaderLookupPolicy lookupPolicy, List<URL> urls) {

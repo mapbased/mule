@@ -7,10 +7,10 @@
 
 package org.mule.runtime.module.artifact.classloader;
 
+import org.mule.runtime.core.util.StringUtils;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Creates {@link DefaultArtifactClassLoaderFilter} instances

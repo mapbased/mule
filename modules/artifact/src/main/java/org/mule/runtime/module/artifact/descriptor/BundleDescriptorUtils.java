@@ -7,8 +7,8 @@
 
 package org.mule.runtime.module.artifact.descriptor;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
 
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;

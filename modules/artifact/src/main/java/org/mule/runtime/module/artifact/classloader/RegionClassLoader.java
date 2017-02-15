@@ -7,12 +7,13 @@
 
 package org.mule.runtime.module.artifact.classloader;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Integer.toHexString;
 import static java.lang.String.format;
 import static java.lang.System.identityHashCode;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
+import org.mule.runtime.core.util.ClassUtils;
 import org.mule.runtime.module.artifact.classloader.exception.ClassNotFoundInRegionException;
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptor;
 
@@ -24,9 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import sun.misc.CompoundEnumeration;
 
 /**
@@ -56,7 +54,6 @@ public class RegionClassLoader extends MuleDeployableArtifactClassLoader {
   private final List<RegisteredClassLoader> registeredClassLoaders = new ArrayList<>();
   private final Map<String, ArtifactClassLoader> packageMapping = new HashMap<>();
   private final Map<String, List<ArtifactClassLoader>> resourceMapping = new HashMap<>();
-  private Logger logger = LoggerFactory.getLogger(getClass());
 
   /**
    * Creates a new region.

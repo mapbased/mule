@@ -16,7 +16,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mule.runtime.module.artifact.classloader.MuleArtifactClassLoader.MULE_LOG_VERBOSE_CLASSLOADING;
+import static org.mule.runtime.core.api.config.MuleProperties.MULE_LOG_VERBOSE_CLASSLOADING;
+
 import org.mule.runtime.module.artifact.classloader.exception.NotExportedClassException;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.junit4.rule.SystemProperty;

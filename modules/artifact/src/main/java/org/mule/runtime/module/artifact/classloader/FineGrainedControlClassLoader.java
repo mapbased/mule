@@ -6,11 +6,12 @@
  */
 package org.mule.runtime.module.artifact.classloader;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Boolean.valueOf;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
-import static org.mule.runtime.module.artifact.classloader.MuleArtifactClassLoader.MULE_LOG_VERBOSE_CLASSLOADING;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
+import static org.mule.runtime.core.api.config.MuleProperties.MULE_LOG_VERBOSE_CLASSLOADING;
+import org.mule.runtime.core.util.ClassUtils;
 import org.mule.runtime.module.artifact.classloader.exception.CompositeClassNotFoundException;
 
 import java.io.IOException;
@@ -24,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-import org.apache.commons.lang.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.CompoundEnumeration;
@@ -43,7 +43,7 @@ public class FineGrainedControlClassLoader extends URLClassLoader
     registerAsParallelCapable();
   }
 
-  private Logger logger = LoggerFactory.getLogger(getClass());
+  protected Logger logger = LoggerFactory.getLogger(getClass());
 
   private final ClassLoaderLookupPolicy lookupPolicy;
   private final boolean verboseLogging;
@@ -191,8 +191,7 @@ public class FineGrainedControlClassLoader extends URLClassLoader
 
     try {
       // fix groovy compiler leaks http://www.mulesoft.org/jira/browse/MULE-5125
-      final Class clazz =
-          ClassUtils.getClass(getClass().getClassLoader(), "org.codehaus.groovy.transform.ASTTransformationVisitor");
+      final Class clazz = ClassUtils.loadClass("org.codehaus.groovy.transform.ASTTransformationVisitor", getClass());
       final Field compUnit = clazz.getDeclaredField("compUnit");
       compUnit.setAccessible(true);
       // static field

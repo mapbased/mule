@@ -6,7 +6,8 @@
  */
 package org.mule.runtime.module.artifact.classloader;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.mule.runtime.api.util.Preconditions.checkArgument;
+
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptor;
 
 import java.net.URL;
