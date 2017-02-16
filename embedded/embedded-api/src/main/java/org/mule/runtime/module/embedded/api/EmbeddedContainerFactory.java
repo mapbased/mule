@@ -61,7 +61,6 @@ public interface EmbeddedContainerFactory {
               throw new IllegalStateException(cause);
             }
           } catch (Exception e) {
-
             throw new IllegalStateException(e);
           }
         }
@@ -71,6 +70,13 @@ public interface EmbeddedContainerFactory {
           try {
             Method stopMethod = o.getClass().getMethod("stop");
             stopMethod.invoke(o);
+          } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+              throw (RuntimeException) cause;
+            } else {
+              throw new IllegalStateException(cause);
+            }
           } catch (Exception e) {
             throw new IllegalStateException(e);
           }
