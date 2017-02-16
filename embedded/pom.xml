@@ -12,9 +12,11 @@
     <artifactId>embedded</artifactId>
     <version>4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <name>Mule Embedded</name>
 
     <modules>
         <module>embedded-api</module>
+        <module>embedded-impl</module>
     </modules>
 
 </project>
