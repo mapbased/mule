@@ -11,13 +11,19 @@ import org.mule.runtime.module.embedded.api.ArtifactInfo;
 import org.mule.runtime.module.embedded.api.EmbeddedContainer;
 import org.mule.runtime.module.embedded.api.EmbeddedContainerFactory;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class EmbeddedContainerFactoryTestCase {
 
+
+  @Rule
+  public TemporaryFolder containerFolder = new TemporaryFolder();
+
   @Test
   public void createsContainer() throws Exception {
-    ArtifactInfo application = new ArtifactInfo(null, null, null, null);
+    ArtifactInfo application = new ArtifactInfo(null, null, null, containerFolder.newFolder().toURL());
 
     EmbeddedContainer embeddedContainer = EmbeddedContainerFactory.create("4.0-SNAPSHOT", application);
 

@@ -11,6 +11,8 @@ import org.mule.runtime.container.api.ModuleRepository;
 import org.mule.runtime.container.internal.ContainerClassLoaderFactory;
 import org.mule.runtime.container.internal.ContainerModuleDiscoverer;
 import org.mule.runtime.container.internal.DefaultModuleRepository;
+import org.mule.runtime.core.api.MuleContext;
+import org.mule.runtime.core.api.context.notification.MuleContextListener;
 import org.mule.runtime.deployment.model.api.application.Application;
 import org.mule.runtime.deployment.model.api.application.ApplicationDescriptor;
 import org.mule.runtime.deployment.model.api.domain.DomainDescriptor;
@@ -36,6 +38,7 @@ import org.mule.runtime.module.deployment.impl.internal.application.DefaultAppli
 import org.mule.runtime.module.deployment.impl.internal.application.TemporaryApplicationDescriptorFactory;
 import org.mule.runtime.module.deployment.impl.internal.application.TemporaryApplicationFactory;
 import org.mule.runtime.module.deployment.impl.internal.artifact.DefaultClassLoaderManager;
+import org.mule.runtime.module.deployment.impl.internal.artifact.MuleContextListenerFactory;
 import org.mule.runtime.module.deployment.impl.internal.domain.DefaultDomainFactory;
 import org.mule.runtime.module.deployment.impl.internal.domain.DefaultDomainManager;
 import org.mule.runtime.module.deployment.impl.internal.plugin.ArtifactPluginDescriptorFactory;
@@ -152,6 +155,30 @@ public class MuleArtifactResourcesRegistry {
     extensionModelLoaderManager = new MuleExtensionModelLoaderManager(containerClassLoader);
     domainFactory = new DefaultDomainFactory(this.domainClassLoaderFactory, domainManager, containerClassLoader,
                                              artifactClassLoaderManager, serviceManager);
+    domainFactory.setMuleContextListenerFactory(new MuleContextListenerFactory() {
+
+      @Override
+      public MuleContextListener create(String artifactName) {
+        // TODO(pablo.kraan): embedded - is this required?
+        return new MuleContextListener() {
+
+          @Override
+          public void onCreation(MuleContext context) {
+
+          }
+
+          @Override
+          public void onInitialization(MuleContext context) {
+
+          }
+
+          @Override
+          public void onConfiguration(MuleContext context) {
+
+          }
+        };
+      }
+    });
 
     DeployableArtifactClassLoaderFactory<PolicyTemplateDescriptor> policyClassLoaderFactory =
         trackDeployableArtifactClassLoaderFactory(new PolicyTemplateClassLoaderFactory());

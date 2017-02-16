@@ -71,7 +71,8 @@ public class EmbeddedController {
   }
 
   private File createDefaultDomainDir() {
-    File defaultDomainFolder = new File(new File("domains"), "default");
+    File containerFolder = new File(artifactInfo.getContainerBaseFolder().getPath());
+    File defaultDomainFolder = new File(new File(containerFolder, "domains"), "default");
     if (!defaultDomainFolder.mkdirs()) {
       throw new RuntimeException("Could not create default domain directory in " + defaultDomainFolder.getAbsolutePath());
     }

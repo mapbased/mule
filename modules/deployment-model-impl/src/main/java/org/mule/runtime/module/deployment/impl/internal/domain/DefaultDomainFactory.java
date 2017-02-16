@@ -71,6 +71,8 @@ public class DefaultDomainFactory implements DomainFactory {
         new DefaultMuleDomain(descriptor, domainClassLoaderFactory.create(getDomainId(DEFAULT_DOMAIN_NAME), containerClassLoader,
                                                                           descriptor, emptyList()),
                               classLoaderRepository, serviceRepository);
+
+    // TODO(pablo.kraan): embedded - is the listener required?
     defaultMuleDomain.setMuleContextListener(muleContextListenerFactory.create(descriptor.getName()));
     DomainWrapper domainWrapper = new DomainWrapper(defaultMuleDomain, this);
     domainManager.addDomain(domainWrapper);
