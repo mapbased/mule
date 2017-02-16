@@ -6,11 +6,9 @@
  */
 package org.mule.runtime.module.deployment.impl.internal.application;
 
-import static java.lang.String.format;
 import static org.mule.runtime.deployment.model.api.plugin.MavenClassLoaderConstants.MAVEN;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.core.config.bootstrap.ArtifactType;
-import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptorCreateException;
 import org.mule.runtime.module.artifact.descriptor.BundleDependency;
 import org.mule.runtime.module.artifact.descriptor.BundleDescriptor;
 import org.mule.runtime.module.artifact.descriptor.BundleScope;
@@ -20,7 +18,6 @@ import org.mule.runtime.module.deployment.impl.internal.artifact.MavenClassLoade
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,19 +49,23 @@ public class AppMavenClassLoaderModelLoader extends MavenClassLoaderModelLoader 
     final Set<BundleDependency> plugins = new HashSet<>();
     nlg.getDependencies(true).stream()
         .filter(this::isMulePlugin)
-        .map(Dependency::getArtifact)
-        .forEach(artifact -> {
+        .forEach(dependency -> {
           final BundleDescriptor.Builder bundleDescriptorBuilder = new BundleDescriptor.Builder()
-              .setArtifactId(artifact.getArtifactId())
-              .setGroupId(artifact.getGroupId())
-              .setVersion(artifact.getVersion())
-              .setType(artifact.getExtension())
-              .setClassifier(artifact.getClassifier());
+              .setArtifactId(dependency.getArtifact().getArtifactId())
+              .setGroupId(dependency.getArtifact().getGroupId())
+              .setVersion(dependency.getArtifact().getVersion())
+              .setType(dependency.getArtifact().getExtension())
+              .setClassifier(dependency.getArtifact().getClassifier());
 
-          plugins.add(new BundleDependency.Builder()
-              .setDescriptor(bundleDescriptorBuilder.build())
-              .setScope(BundleScope.COMPILE)
-              .build());
+          try {
+            plugins.add(new BundleDependency.Builder()
+                .setDescriptor(bundleDescriptorBuilder.build())
+                .setScope(BundleScope.COMPILE)
+                .setBundleUrl(dependency.getArtifact().getFile().toURL())
+                .build());
+          } catch (MalformedURLException e) {
+            throw new MuleRuntimeException(e);
+          }
         });
     classLoaderModelBuilder.dependingOn(plugins);
   }
@@ -84,16 +85,6 @@ public class AppMavenClassLoaderModelLoader extends MavenClassLoaderModelLoader 
           });
     } catch (MalformedURLException e) {
       throw new MuleRuntimeException(e);
-    }
-  }
-
-  private URL getUrl(File pluginFolder, File file) {
-    try {
-      return file.toURI().toURL();
-    } catch (MalformedURLException e) {
-      throw new ArtifactDescriptorCreateException(format("There was an issue obtaining the URL for the plugin [%s], file [%s]",
-                                                         pluginFolder.getAbsolutePath(), file.getAbsolutePath()),
-                                                  e);
     }
   }
 

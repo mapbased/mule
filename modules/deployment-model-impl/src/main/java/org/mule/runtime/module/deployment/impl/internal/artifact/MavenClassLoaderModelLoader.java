@@ -8,6 +8,7 @@ package org.mule.runtime.module.deployment.impl.internal.artifact;
 
 import static java.io.File.separator;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -29,7 +30,6 @@ import org.mule.runtime.deployment.model.api.plugin.MavenClassLoaderConstants;
 import org.mule.runtime.deployment.model.internal.plugin.BundlePluginDependenciesResolver;
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptorCreateException;
 import org.mule.runtime.module.artifact.descriptor.BundleDescriptor;
-import org.mule.runtime.module.artifact.descriptor.BundleScope;
 import org.mule.runtime.module.artifact.descriptor.ClassLoaderModel;
 import org.mule.runtime.module.artifact.descriptor.ClassLoaderModel.ClassLoaderModelBuilder;
 import org.mule.runtime.module.artifact.descriptor.ClassLoaderModelLoader;
@@ -37,7 +37,6 @@ import org.mule.runtime.module.artifact.descriptor.InvalidDescriptorLoaderExcept
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +57,7 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.impl.ArtifactDescriptorReader;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.impl.VersionRangeResolver;
@@ -135,7 +135,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
         .exportingResources(new HashSet<>(getAttribute(attributes, EXPORTED_RESOURCES)));
     final DependencyResult dependencyResult = assemblyDependenciesFromPom(artifactFolder, model);
     final PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
-    //This adds a ton of things that not always make sense
+    // This adds a ton of things that not always make sense
     dependencyResult.getRoot().accept(nlg);
     loadUrls(artifactFolder, classLoaderModelBuilder, dependencyResult, nlg);
     loadDependencies(classLoaderModelBuilder, nlg);
@@ -157,8 +157,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
    * @return true if the {@link Dependency} is {@link ArtifactPluginDescriptor#MULE_PLUGIN_CLASSIFIER}, false otherwise
    */
   protected boolean isMulePlugin(Dependency dependency) {
-    return BundleScope.PROVIDED.toString().equals(dependency.getScope().toUpperCase())
-        && MULE_PLUGIN_CLASSIFIER.equals(dependency.getArtifact().getClassifier());
+    return MULE_PLUGIN_CLASSIFIER.equals(dependency.getArtifact().getClassifier());
   }
 
   private DependencyResult assemblyDependenciesFromPom(File pluginFolder, Model model)
@@ -169,16 +168,28 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
                                                    "pom",
                                                    model.getVersion() != null ? model.getVersion()
                                                        : model.getParent().getVersion());
+
     createRepositorySystem(pluginFolder, defaultArtifact);
     final CollectRequest currentPluginRequest = new CollectRequest();
     try {
       final ArtifactDescriptorResult artifactDescriptorResult =
           system.readArtifactDescriptor(session, new ArtifactDescriptorRequest(defaultArtifact, null, null));
-      currentPluginRequest.setDependencies(artifactDescriptorResult.getDependencies());
+      List<Dependency> dependencies = artifactDescriptorResult.getDependencies();
+      List<Dependency> dependenciesWithExclusions = new ArrayList<>();
+      dependencies.stream()
+          .forEach(dependency -> {
+            if ("mule-plugin".equals(dependency.getArtifact().getClassifier())) {
+              dependenciesWithExclusions.add(dependency.setExclusions(asList(new Exclusion("*", "*", "8", "*"))));
+            } else {
+              dependenciesWithExclusions.add(dependency);
+            }
+          });
+      currentPluginRequest.setDependencies(dependenciesWithExclusions);
       currentPluginRequest.setManagedDependencies(artifactDescriptorResult.getManagedDependencies());
-      currentPluginRequest.setRepositories(Arrays
-          .asList((new RemoteRepository.Builder("http://central.maven.org/maven2/", "default",
-                                                "http://central.maven.org/maven2/".trim()).build())));
+      currentPluginRequest.setRepositories(
+                                           asList((new RemoteRepository.Builder("http://central.maven.org/maven2/", "default",
+                                                                                "http://central.maven.org/maven2/".trim())
+                                                                                    .build())));
 
       final CollectResult collectResult = system.collectDependencies(session, currentPluginRequest);
 
