@@ -45,7 +45,8 @@ public class ClasspathModuleDiscoverer implements ModuleDiscoverer {
         final MuleModule module = createModule(moduleProperties);
 
         if (moduleNames.contains(module.getName())) {
-          throw new IllegalStateException(String.format("Module '%s' was already defined", module.getName()));
+          continue;
+          //throw new IllegalStateException(String.format("Module '%s' was already defined", module.getName()));
         }
         moduleNames.add(module.getName());
         modules.add(module);
