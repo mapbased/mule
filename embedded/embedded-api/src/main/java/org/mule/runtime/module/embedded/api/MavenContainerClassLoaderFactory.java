@@ -95,7 +95,8 @@ public class MavenContainerClassLoaderFactory {
   public ClassLoader create(String version) {
     Artifact defaultArtifact = getContainerBomArtifact(version);
 
-    final PreorderNodeListGenerator nlg = assemblyDependenciesForArtifact(defaultArtifact, dependency -> !dependency.getArtifact().getExtension().equals("zip"));
+    final PreorderNodeListGenerator nlg =
+        assemblyDependenciesForArtifact(defaultArtifact, dependency -> !dependency.getArtifact().getExtension().equals("zip"));
     List<URL> urls = loadUrls(nlg);
 
     return new URLClassLoader(urls.toArray(new URL[0]));
@@ -104,7 +105,8 @@ public class MavenContainerClassLoaderFactory {
   public List<URL> getServices(String version) {
     Artifact defaultArtifact = getContainerBomArtifact(version);
 
-    final PreorderNodeListGenerator nlg = assemblyDependenciesForArtifact(defaultArtifact, dependency -> dependency.getArtifact().getExtension().equals("zip"));
+    final PreorderNodeListGenerator nlg =
+        assemblyDependenciesForArtifact(defaultArtifact, dependency -> dependency.getArtifact().getExtension().equals("zip"));
     return loadUrls(nlg);
   }
 
@@ -128,9 +130,9 @@ public class MavenContainerClassLoaderFactory {
       final ArtifactDescriptorResult artifactDescriptorResult =
           system.readArtifactDescriptor(session, new ArtifactDescriptorRequest(artifact, null, null));
       collectRequest.setDependencies(artifactDescriptorResult.getDependencies()
-                                         .stream()
-                                         .filter(dependency -> filter.test(dependency))
-                                         .collect(toList()));
+          .stream()
+          .filter(dependency -> filter.test(dependency))
+          .collect(toList()));
       collectRequest.setManagedDependencies(artifactDescriptorResult.getManagedDependencies());
 
       final CollectResult collectResult = system.collectDependencies(session, collectRequest);

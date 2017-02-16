@@ -32,5 +32,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.mule.services</groupId>
+            <artifactId>mule-service-http</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>
     </dependencies>
 </project>
