@@ -24,12 +24,14 @@ import org.mule.runtime.api.deployment.meta.MulePluginModel;
 import org.mule.runtime.api.deployment.persistence.MulePluginModelJsonSerializer;
 import org.mule.runtime.container.api.MuleFoldersUtil;
 import org.mule.runtime.core.registry.SpiServiceRegistry;
+import org.mule.runtime.core.util.FilenameUtils;
 import org.mule.runtime.core.util.PropertiesUtils;
 import org.mule.runtime.deployment.model.api.application.ApplicationDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginRepository;
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptorCreateException;
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptorFactory;
+import org.mule.runtime.module.artifact.descriptor.BundleDependency;
 import org.mule.runtime.module.artifact.descriptor.BundleDescriptor;
 import org.mule.runtime.module.artifact.descriptor.BundleDescriptorLoader;
 import org.mule.runtime.module.artifact.descriptor.ClassLoaderModel;
@@ -41,6 +43,7 @@ import org.mule.runtime.module.artifact.util.JarInfo;
 import org.mule.runtime.module.deployment.impl.internal.artifact.DescriptorLoaderRepository;
 import org.mule.runtime.module.deployment.impl.internal.artifact.LoaderNotFoundException;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ServiceRegistryDescriptorLoaderRepository;
+import org.mule.runtime.module.deployment.impl.internal.plugin.ArtifactPluginDescriptorFactory;
 import org.mule.runtime.module.deployment.impl.internal.plugin.ArtifactPluginDescriptorLoader;
 import org.mule.runtime.module.reboot.MuleContainerBootstrapUtils;
 
@@ -146,7 +149,16 @@ public class ApplicationDescriptorFactory implements ArtifactDescriptorFactory<A
     descriptor.setRootFolder(applicationFolder);
 
     mulePluginModel.getClassLoaderModelLoaderDescriptor().ifPresent(classLoaderModelLoaderDescriptor -> {
-      descriptor.setClassLoaderModel(getClassLoaderModel(applicationFolder, classLoaderModelLoaderDescriptor));
+      ClassLoaderModel classLoaderModel = getClassLoaderModel(applicationFolder, classLoaderModelLoaderDescriptor);
+      descriptor.setClassLoaderModel(classLoaderModel);
+
+      descriptor.setClassLoaderModel(classLoaderModel);
+
+      try {
+        descriptor.setPlugins(createArtifactPluginDescriptors(classLoaderModel));
+      } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
     });
 
     descriptor.setBundleDescriptor(getBundleDescriptor(applicationFolder, mulePluginModel));
@@ -204,7 +216,6 @@ public class ApplicationDescriptorFactory implements ArtifactDescriptorFactory<A
       final File appPropsFile = new File(artifactFolder, DEFAULT_APP_PROPERTIES_RESOURCE);
       setApplicationProperties(desc, appPropsFile);
 
-      desc.setPlugins(parsePluginDescriptors(artifactFolder, desc));
       File appClassesFolder = getAppClassesFolder(desc);
       URL[] libraries = findLibraries(desc);
       URL[] sharedLibraries = findSharedLibraries(desc);
@@ -222,12 +233,35 @@ public class ApplicationDescriptorFactory implements ArtifactDescriptorFactory<A
       classLoaderModelBuilder.exportingPackages(jarInfo.getPackages())
           .exportingResources(jarInfo.getResources());
 
-      desc.setClassLoaderModel(classLoaderModelBuilder.build());
+      ClassLoaderModel classLoaderModel = classLoaderModelBuilder.build();
+      desc.setClassLoaderModel(classLoaderModel);
+
+      desc.setPlugins(createArtifactPluginDescriptors(classLoaderModel));
     } catch (IOException e) {
       throw new ArtifactDescriptorCreateException("Unable to create application descriptor", e);
     }
 
     return desc;
+  }
+
+  private Set<ArtifactPluginDescriptor> createArtifactPluginDescriptors(ClassLoaderModel classLoaderModel) throws IOException {
+    // TODO(pablo.kraan): embedded - inject this shit
+    ArtifactPluginDescriptorLoader pluginDescriptorLoader =
+        new ArtifactPluginDescriptorLoader(new ArtifactPluginDescriptorFactory());
+
+    Set<ArtifactPluginDescriptor> pluginDescriptors = new HashSet<>();
+    for (BundleDependency bundleDependency : classLoaderModel.getDependencies()) {
+      if (bundleDependency.getDescriptor().getClassifier().get().equals("mule-plugin")) {
+        // TODO(pablo.kraan): embedded - get the file form the app descriptor
+        File pluginFile = new File(bundleDependency.getBundleUrl().getFile());
+        File tempFolder = File.createTempFile("test", FilenameUtils.getBaseName(pluginFile.getName()));
+        tempFolder.delete();
+        tempFolder.mkdir();
+
+        pluginDescriptors.add(pluginDescriptorLoader.load(pluginFile, tempFolder));
+      }
+    }
+    return pluginDescriptors;
   }
 
   private URL[] findLibraries(ApplicationDescriptor descriptor) throws MalformedURLException {

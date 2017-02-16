@@ -12,6 +12,7 @@ import static java.util.stream.Stream.concat;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.deployment.model.internal.AbstractArtifactClassLoaderBuilder.getArtifactPluginId;
+import org.mule.runtime.core.util.FilenameUtils;
 import org.mule.runtime.deployment.model.api.DeploymentException;
 import org.mule.runtime.deployment.model.api.application.Application;
 import org.mule.runtime.deployment.model.api.application.ApplicationDescriptor;
@@ -21,9 +22,12 @@ import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginRepository;
 import org.mule.runtime.module.artifact.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.classloader.MuleDeployableArtifactClassLoader;
+import org.mule.runtime.module.artifact.descriptor.BundleDependency;
 import org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactFactory;
 import org.mule.runtime.module.deployment.impl.internal.artifact.MuleContextListenerFactory;
 import org.mule.runtime.module.deployment.impl.internal.domain.DomainRepository;
+import org.mule.runtime.module.deployment.impl.internal.plugin.ArtifactPluginDescriptorFactory;
+import org.mule.runtime.module.deployment.impl.internal.plugin.ArtifactPluginDescriptorLoader;
 import org.mule.runtime.module.deployment.impl.internal.plugin.DefaultArtifactPlugin;
 import org.mule.runtime.module.deployment.impl.internal.policy.DefaultPolicyInstanceProviderFactory;
 import org.mule.runtime.module.deployment.impl.internal.policy.DefaultPolicyTemplateFactory;
@@ -34,6 +38,7 @@ import org.mule.runtime.module.service.ServiceRepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -104,10 +109,11 @@ public class DefaultApplicationFactory implements ArtifactFactory<Application> {
       throw new DeploymentException(createStaticMessage(format("Domain '%s' has to be deployed in order to deploy Application '%s'",
                                                                descriptor.getDomain(), descriptor.getName())));
     }
+    List<ArtifactPluginDescriptor> pluginDescriptors = createArtifactPluginDescriptors(descriptor);
 
     MuleDeployableArtifactClassLoader applicationClassLoader =
         applicationClassLoaderBuilderFactory.createArtifactClassLoaderBuilder()
-            .setDomain(domain).addArtifactPluginDescriptors(descriptor.getPlugins().toArray(new ArtifactPluginDescriptor[0]))
+            .setDomain(domain).addArtifactPluginDescriptors(pluginDescriptors.toArray(new ArtifactPluginDescriptor[0]))
             .setArtifactId(descriptor.getName()).setArtifactDescriptor(descriptor).build();
 
     List<ArtifactPluginDescriptor> applicationPluginDescriptors =
@@ -136,6 +142,26 @@ public class DefaultApplicationFactory implements ArtifactFactory<Application> {
     }
 
     return new ApplicationWrapper(delegate);
+  }
+
+  private List<ArtifactPluginDescriptor> createArtifactPluginDescriptors(ApplicationDescriptor descriptor) throws IOException {
+    // TODO(pablo.kraan): embedded - inject this shit
+    ArtifactPluginDescriptorLoader pluginDescriptorLoader =
+        new ArtifactPluginDescriptorLoader(new ArtifactPluginDescriptorFactory());
+
+    List<ArtifactPluginDescriptor> pluginDescriptors = new ArrayList<>();
+    for (BundleDependency bundleDependency : descriptor.getClassLoaderModel().getDependencies()) {
+      if (bundleDependency.getDescriptor().getClassifier().equals("mule-plugin")) {
+        // TODO(pablo.kraan): embedded - get the file form the app descriptor
+        File pluginFile = new File("zaraza");
+        File tempFolder = File.createTempFile("", FilenameUtils.getBaseName(pluginFile.getName()));
+        tempFolder.delete();
+        tempFolder.mkdir();
+
+        pluginDescriptors.add(pluginDescriptorLoader.load(pluginFile, tempFolder));
+      }
+    }
+    return pluginDescriptors;
   }
 
   private List<ArtifactPlugin> createArtifactPluginList(MuleDeployableArtifactClassLoader applicationClassLoader,
