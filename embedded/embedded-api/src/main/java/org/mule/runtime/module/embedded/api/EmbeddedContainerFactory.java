@@ -11,6 +11,7 @@ import static org.mule.runtime.module.embedded.api.MavenUtils.getMavenLocalRepos
 
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -52,7 +53,15 @@ public interface EmbeddedContainerFactory {
           try {
             Method startMethod = o.getClass().getMethod("start");
             startMethod.invoke(o);
+          } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+              throw (RuntimeException) cause;
+            } else {
+              throw new IllegalStateException(cause);
+            }
           } catch (Exception e) {
+
             throw new IllegalStateException(e);
           }
         }
