@@ -233,7 +233,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
     session = newDefaultRepositorySystemSession();
     RepositorySystem repositorySystem = createRepositorySystem();
     session.setLocalRepositoryManager(repositorySystem
-        .newLocalRepositoryManager(session, new LocalRepository("/Users/pablolagreca/.m2/repository")));
+        .newLocalRepositoryManager(session, new LocalRepository(MavenUtils.getMavenLocalRepository())));
     session.setOffline(false);
     session.setIgnoreArtifactDescriptorRepositories(true);
     session.setWorkspaceReader(new PomWorkspaceReader(pluginFolder, pluginArtifact));

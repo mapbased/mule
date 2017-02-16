@@ -7,6 +7,8 @@
 
 package org.mule.runtime.module.embedded.api;
 
+import static org.mule.runtime.module.embedded.api.MavenUtils.getMavenLocalRepository;
+
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -646,7 +648,8 @@ public interface EmbeddedContainerFactory {
     //
     //cp.add("file:" + m2BasePath
     //    + "//Users/pablokraan/.m2/repository/org/mule/mule-module-embedded-api/4.0-SNAPSHOT/mule-module-embedded-api-4.0-SNAPSHOT.jar");
-    cp.add("file:///Users/pablolagreca/.m2/repository/org/mule/mule-module-embedded-impl/4.0-SNAPSHOT/mule-module-embedded-impl-4.0-SNAPSHOT.jar");
+    cp.add("file://" + getMavenLocalRepository()
+        + "/org/mule/mule-module-embedded-impl/4.0-SNAPSHOT/mule-module-embedded-impl-4.0-SNAPSHOT.jar");
 
     List<URL> urls = new ArrayList<>();
     for (String e : cp) {
