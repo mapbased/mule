@@ -7,6 +7,8 @@
 
 package org.mule.runtime.module.artifact.descriptor;
 
+import org.mule.runtime.core.config.bootstrap.ArtifactType;
+
 import java.io.File;
 import java.util.Map;
 
@@ -31,5 +33,7 @@ public interface DescriptorLoader<T> {
    * @throws InvalidDescriptorLoaderException when is not possible to load the object with the provided configuration.
    */
   T load(File artifactFolder, Map<String, Object> attributes) throws InvalidDescriptorLoaderException;
+
+  boolean supportsArtifactType(ArtifactType artifactType);
 
 }

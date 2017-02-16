@@ -15,6 +15,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mule.runtime.core.config.bootstrap.ArtifactType.PLUGIN;
 import static org.mule.runtime.module.deployment.impl.internal.artifact.ServiceRegistryDescriptorLoaderRepository.noRegisteredLoaderError;
 import org.mule.runtime.core.api.registry.ServiceRegistry;
 import org.mule.runtime.module.artifact.descriptor.BundleDescriptorLoader;
@@ -47,8 +48,8 @@ public class ServiceRegistryDescriptorLoaderRepositoryTestCase extends AbstractM
     when(serviceRegistry.lookupProviders(ClassLoaderModelLoader.class, getClass().getClassLoader()))
         .thenReturn(classLoaderModelLoaders);
 
-    repository.get(LOADER_ID, ClassLoaderModelLoader.class);
-    repository.get(LOADER_ID, ClassLoaderModelLoader.class);
+    repository.get(LOADER_ID, PLUGIN, ClassLoaderModelLoader.class);
+    repository.get(LOADER_ID, PLUGIN, ClassLoaderModelLoader.class);
 
     verify(serviceRegistry).lookupProviders(ClassLoaderModelLoader.class, getClass().getClassLoader());
     verify(serviceRegistry).lookupProviders(BundleDescriptorLoader.class, getClass().getClassLoader());
@@ -61,7 +62,7 @@ public class ServiceRegistryDescriptorLoaderRepositoryTestCase extends AbstractM
     expectedException.expect(LoaderNotFoundException.class);
     expectedException.expectMessage(noRegisteredLoaderError("invalid", ClassLoaderModelLoader.class));
 
-    repository.get("invalid", ClassLoaderModelLoader.class);
+    repository.get("invalid", PLUGIN, ClassLoaderModelLoader.class);
   }
 
   @Test
@@ -71,7 +72,7 @@ public class ServiceRegistryDescriptorLoaderRepositoryTestCase extends AbstractM
     Collection<ClassLoaderModelLoader> classLoaderModelLoaders = singleton(expectedClassLoaderModelLoader);
     when(serviceRegistry.lookupProviders(ClassLoaderModelLoader.class, getClass().getClassLoader()))
         .thenReturn(classLoaderModelLoaders);
-    ClassLoaderModelLoader classLoaderModelLoader = repository.get(LOADER_ID, ClassLoaderModelLoader.class);
+    ClassLoaderModelLoader classLoaderModelLoader = repository.get(LOADER_ID, PLUGIN, ClassLoaderModelLoader.class);
 
     assertThat(classLoaderModelLoader, is(expectedClassLoaderModelLoader));
   }
@@ -87,6 +88,6 @@ public class ServiceRegistryDescriptorLoaderRepositoryTestCase extends AbstractM
     expectedException.expect(LoaderNotFoundException.class);
     expectedException.expectMessage(noRegisteredLoaderError(LOADER_ID, BundleDescriptorLoader.class));
 
-    repository.get(LOADER_ID, BundleDescriptorLoader.class);
+    repository.get(LOADER_ID, PLUGIN, BundleDescriptorLoader.class);
   }
 }

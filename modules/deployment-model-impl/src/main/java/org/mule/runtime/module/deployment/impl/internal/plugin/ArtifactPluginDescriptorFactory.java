@@ -13,6 +13,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
 import static org.mule.runtime.container.internal.ClasspathModuleDiscoverer.EXPORTED_CLASS_PACKAGES_PROPERTY;
 import static org.mule.runtime.container.internal.ClasspathModuleDiscoverer.EXPORTED_RESOURCE_PROPERTY;
+import static org.mule.runtime.core.config.bootstrap.ArtifactType.PLUGIN;
 import static org.mule.runtime.core.util.PropertiesUtils.loadProperties;
 import static org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor.EXTENSION_BUNDLE_TYPE;
 import static org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor.MULE_ARTIFACT_FOLDER;
@@ -232,7 +233,8 @@ public class ArtifactPluginDescriptorFactory implements ArtifactDescriptorFactor
     BundleDescriptorLoader bundleDescriptorLoader;
     try {
       bundleDescriptorLoader =
-          descriptorLoaderRepository.get(mulePluginModel.getBundleDescriptorLoader().getId(), BundleDescriptorLoader.class);
+          descriptorLoaderRepository.get(mulePluginModel.getBundleDescriptorLoader().getId(), PLUGIN,
+                                         BundleDescriptorLoader.class);
     } catch (LoaderNotFoundException e) {
       throw new ArtifactDescriptorCreateException(invalidBundleDescriptorLoaderIdError(pluginFolder, mulePluginModel
           .getBundleDescriptorLoader()));
@@ -249,7 +251,7 @@ public class ArtifactPluginDescriptorFactory implements ArtifactDescriptorFactor
     ClassLoaderModelLoader classLoaderModelLoader;
     try {
       classLoaderModelLoader =
-          descriptorLoaderRepository.get(classLoaderModelLoaderDescriptor.getId(), ClassLoaderModelLoader.class);
+          descriptorLoaderRepository.get(classLoaderModelLoaderDescriptor.getId(), PLUGIN, ClassLoaderModelLoader.class);
     } catch (LoaderNotFoundException e) {
       throw new ArtifactDescriptorCreateException(invalidClassLoaderModelIdError(pluginFolder,
                                                                                  classLoaderModelLoaderDescriptor));

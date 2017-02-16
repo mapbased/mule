@@ -14,6 +14,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -30,6 +31,7 @@ import org.mule.runtime.core.util.IOUtils;
 import org.mule.runtime.deployment.model.api.application.ApplicationDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginRepository;
+import org.mule.runtime.module.artifact.descriptor.ClassLoaderModel;
 import org.mule.runtime.module.deployment.impl.internal.builder.ApplicationFileBuilder;
 import org.mule.runtime.module.deployment.impl.internal.builder.ArtifactPluginFileBuilder;
 import org.mule.runtime.module.deployment.impl.internal.plugin.ArtifactPluginDescriptorFactory;
@@ -166,5 +168,28 @@ public class ApplicationDescriptorFactoryTestCase extends AbstractMuleTestCase {
   private void copyResourceAs(String resourceName, File destination) throws IOException {
     final InputStream sourcePlugin = IOUtils.getResourceAsStream(resourceName, getClass());
     copy(sourcePlugin, new FileOutputStream(destination));
+  }
+
+  @Test
+  public void readFromJsonDescriptor() throws Exception {
+    File appFolder = MuleFoldersUtil.getAppFolder(APP_NAME);
+    appFolder.mkdirs();
+
+    File muleArtifactFolder = new File(appFolder, "META-INF/mule-artifact");
+    muleArtifactFolder.mkdirs();
+    File descriptorFile = new File(muleArtifactFolder, "mule-app.json");
+    copyResourceAs("json-descriptor/application-using-http.json", descriptorFile);
+    File pomFile = new File(muleArtifactFolder, "pom.xml");
+    copyResourceAs("json-descriptor/application-using-http.xml", pomFile);
+
+    final ApplicationDescriptorFactory applicationDescriptorFactory =
+        new ApplicationDescriptorFactory(new ArtifactPluginDescriptorLoader(new ArtifactPluginDescriptorFactory()),
+                                         applicationPluginRepository);
+
+    ApplicationDescriptor desc = applicationDescriptorFactory.create(getAppFolder(APP_NAME));
+    ClassLoaderModel classLoaderModel = desc.getClassLoaderModel();
+    assertThat(classLoaderModel.getDependencies().size(), is(1));
+    assertThat(classLoaderModel.getDependencies().iterator().next().getDescriptor().getClassifier().get(), is("mule-plugin"));
+    assertThat(classLoaderModel.getUrls().length, is(2));
   }
 }

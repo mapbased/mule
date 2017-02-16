@@ -18,6 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mule.runtime.container.internal.ClasspathModuleDiscoverer.EXPORTED_CLASS_PACKAGES_PROPERTY;
 import static org.mule.runtime.container.internal.ClasspathModuleDiscoverer.EXPORTED_RESOURCE_PROPERTY;
+import static org.mule.runtime.core.config.bootstrap.ArtifactType.PLUGIN;
 import static org.mule.runtime.core.util.FileUtils.stringToFile;
 import static org.mule.runtime.core.util.FileUtils.unzip;
 import static org.mule.runtime.module.artifact.classloader.DefaultArtifactClassLoaderFilter.NULL_CLASSLOADER_FILTER;
@@ -92,14 +93,14 @@ public class ArtifactPluginDescriptorFactoryTestCase extends AbstractMuleTestCas
     when(classLoaderFilterFactory.create(null, null))
         .thenReturn(NULL_CLASSLOADER_FILTER);
 
-    when(descriptorLoaderRepository.get(FILE_SYSTEM_POLICY_MODEL_LOADER_ID, ClassLoaderModelLoader.class))
+    when(descriptorLoaderRepository.get(FILE_SYSTEM_POLICY_MODEL_LOADER_ID, PLUGIN, ClassLoaderModelLoader.class))
         .thenReturn(new FileSystemPolicyClassLoaderModelLoader());
-    when(descriptorLoaderRepository.get(INVALID_LOADER_ID, ClassLoaderModelLoader.class))
+    when(descriptorLoaderRepository.get(INVALID_LOADER_ID, PLUGIN, ClassLoaderModelLoader.class))
         .thenThrow(new LoaderNotFoundException(INVALID_LOADER_ID));
 
-    when(descriptorLoaderRepository.get(PROPERTIES_BUNDLE_DESCRIPTOR_LOADER_ID, BundleDescriptorLoader.class))
+    when(descriptorLoaderRepository.get(PROPERTIES_BUNDLE_DESCRIPTOR_LOADER_ID, PLUGIN, BundleDescriptorLoader.class))
         .thenReturn(new PropertiesBundleDescriptorLoader());
-    when(descriptorLoaderRepository.get(INVALID_LOADER_ID, BundleDescriptorLoader.class))
+    when(descriptorLoaderRepository.get(INVALID_LOADER_ID, PLUGIN, BundleDescriptorLoader.class))
         .thenThrow(new LoaderNotFoundException(INVALID_LOADER_ID));
   }
 
