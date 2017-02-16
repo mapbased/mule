@@ -13,12 +13,21 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_IGNORE;
 import static org.eclipse.aether.repository.RepositoryPolicy.UPDATE_POLICY_NEVER;
 import static org.eclipse.aether.util.artifact.ArtifactIdUtils.toId;
+import static org.eclipse.aether.util.artifact.JavaScopes.COMPILE;
+import static org.eclipse.aether.util.artifact.JavaScopes.PROVIDED;
+import static org.eclipse.aether.util.artifact.JavaScopes.RUNTIME;
+import static org.eclipse.aether.util.artifact.JavaScopes.SYSTEM;
+import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -29,7 +38,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
@@ -43,9 +54,12 @@ import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
-import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.PatternInclusionsDependencyFilter;
 import org.eclipse.aether.util.filter.ScopeDependencyFilter;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import org.slf4j.Logger;
@@ -79,15 +93,26 @@ public class MavenContainerClassLoaderFactory {
    * @return a {@link ClassLoader} Container.
    */
   public ClassLoader create(String version) {
-    Artifact defaultArtifact = new DefaultArtifact(CONTAINER_BOM_GROUP_ID, CONTAINER_BOM_ARTIFACT_ID,
-                                                   null,
-                                                   "pom",
-                                                   version);
+    Artifact defaultArtifact = getContainerBomArtifact(version);
 
-    final PreorderNodeListGenerator nlg = assemblyDependenciesForArtifact(defaultArtifact);
+    final PreorderNodeListGenerator nlg = assemblyDependenciesForArtifact(defaultArtifact, dependency -> !dependency.getArtifact().getExtension().equals("zip"));
     List<URL> urls = loadUrls(nlg);
 
     return new URLClassLoader(urls.toArray(new URL[0]));
+  }
+
+  public List<URL> getServices(String version) {
+    Artifact defaultArtifact = getContainerBomArtifact(version);
+
+    final PreorderNodeListGenerator nlg = assemblyDependenciesForArtifact(defaultArtifact, dependency -> dependency.getArtifact().getExtension().equals("zip"));
+    return loadUrls(nlg);
+  }
+
+  private Artifact getContainerBomArtifact(String version) {
+    return new DefaultArtifact(CONTAINER_BOM_GROUP_ID, CONTAINER_BOM_ARTIFACT_ID,
+                               null,
+                               "pom",
+                               version);
   }
 
   private List<URL> loadUrls(PreorderNodeListGenerator nlg) {
@@ -96,25 +121,28 @@ public class MavenContainerClassLoaderFactory {
         .map(artifact -> getUrl(artifact.getFile())).collect(Collectors.toList());
   }
 
-  private boolean isMuleService(Artifact artifact) {
-    return artifact.getClassifier().equals(MULE_SERVICE);
-  }
-
-  private PreorderNodeListGenerator assemblyDependenciesForArtifact(Artifact artifact) {
+  private PreorderNodeListGenerator assemblyDependenciesForArtifact(Artifact artifact, Predicate<Dependency> filter) {
     createRepositorySystem();
     final CollectRequest collectRequest = new CollectRequest();
     try {
       final ArtifactDescriptorResult artifactDescriptorResult =
           system.readArtifactDescriptor(session, new ArtifactDescriptorRequest(artifact, null, null));
-      collectRequest.setDependencies(artifactDescriptorResult.getDependencies().stream().filter(dependency ->
-        !isMuleService(dependency.getArtifact())
-      ).collect(toList()));
+      collectRequest.setDependencies(artifactDescriptorResult.getDependencies()
+                                         .stream()
+                                         .filter(dependency -> filter.test(dependency))
+                                         .collect(toList()));
       collectRequest.setManagedDependencies(artifactDescriptorResult.getManagedDependencies());
 
       final CollectResult collectResult = system.collectDependencies(session, collectRequest);
 
       final DependencyRequest dependencyRequest = new DependencyRequest();
-      dependencyRequest.setFilter(new ScopeDependencyFilter(JavaScopes.TEST, JavaScopes.PROVIDED));
+
+      Collection<String> excluded = new ArrayList<>();
+      Collections.addAll(excluded, PROVIDED, SYSTEM, RUNTIME, TEST);
+      Collection<String> included = new ArrayList<>();
+      included.add(COMPILE);
+      dependencyRequest.setFilter(new ScopeDependencyFilter(included, excluded));
+
       dependencyRequest.setRoot(collectResult.getRoot());
       dependencyRequest.setCollectRequest(collectRequest);
       final DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
@@ -152,7 +180,6 @@ public class MavenContainerClassLoaderFactory {
   }
 
   private void createRepositorySystem() {
-
     session = newDefaultRepositorySystemSession();
     session.setOffline(true);
     session.setIgnoreArtifactDescriptorRepositories(true);
@@ -165,6 +192,13 @@ public class MavenContainerClassLoaderFactory {
     final DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     session.setUpdatePolicy(UPDATE_POLICY_NEVER);
     session.setChecksumPolicy(CHECKSUM_POLICY_IGNORE);
+
+    DependencySelector dependencySelector =
+        new AndDependencySelector(new ScopeDependencySelector(RUNTIME, TEST),
+                                  new OptionalDependencySelector(),
+                                  new ExclusionDependencySelector());
+    session.setDependencySelector(dependencySelector);
+
     return session;
   }
 
