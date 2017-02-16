@@ -52,7 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates a {@link List} of {@link URL}'s for the Container.
+ * Creates a {@link ClassLoader} with the {@link URL}'s for the Container.
  *
  * @since 4.0
  */
@@ -73,10 +73,10 @@ public class MavenContainerClassLoaderFactory {
   private RepositorySystem system;
 
   /**
-   * Creates the {@link List} of {@link URL}s for the Container dependencies for a given version.
+   * Creates the {@link ClassLoader} Container for a given version.
    *
    * @param version Maven version. Not null.
-   * @return a {@link List} of {@link URL}'s loaded with all its dependencies.
+   * @return a {@link ClassLoader} Container.
    */
   public ClassLoader create(String version) {
     Artifact defaultArtifact = new DefaultArtifact(CONTAINER_BOM_GROUP_ID, CONTAINER_BOM_ARTIFACT_ID,
@@ -93,7 +93,6 @@ public class MavenContainerClassLoaderFactory {
   private List<URL> loadUrls(PreorderNodeListGenerator nlg) {
     return nlg.getArtifacts(false)
         .stream()
-        .filter(artifact -> !isMuleService(artifact))
         .map(artifact -> getUrl(artifact.getFile())).collect(Collectors.toList());
   }
 
@@ -107,7 +106,9 @@ public class MavenContainerClassLoaderFactory {
     try {
       final ArtifactDescriptorResult artifactDescriptorResult =
           system.readArtifactDescriptor(session, new ArtifactDescriptorRequest(artifact, null, null));
-      collectRequest.setDependencies(artifactDescriptorResult.getDependencies());
+      collectRequest.setDependencies(artifactDescriptorResult.getDependencies().stream().filter(dependency ->
+        !isMuleService(dependency.getArtifact())
+      ).collect(toList()));
       collectRequest.setManagedDependencies(artifactDescriptorResult.getManagedDependencies());
 
       final CollectResult collectResult = system.collectDependencies(session, collectRequest);
