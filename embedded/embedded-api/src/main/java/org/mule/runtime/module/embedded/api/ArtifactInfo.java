@@ -7,11 +7,12 @@
 
 package org.mule.runtime.module.embedded.api;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
 
-public class ArtifactInfo {
+public class ArtifactInfo implements Serializable {
 
   private final List<URI> configs;
   private final URL classesFolder;
