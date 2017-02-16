@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public class PluginMavenClassLoaderModelLoader extends MavenClassLoaderModelLoad
   }
 
   protected void loadUrls(File pluginFolder, ClassLoaderModelBuilder classLoaderModelBuilder,
-                          PreorderNodeListGenerator nlg) {
+                          DependencyResult dependencyResult, PreorderNodeListGenerator nlg) {
     // Adding the exploded JAR root folder
     classLoaderModelBuilder.containing(getUrl(pluginFolder, pluginFolder));
 

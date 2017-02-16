@@ -13,6 +13,7 @@ import static org.mule.runtime.container.api.MuleFoldersUtil.getServicesFolder;
 import static org.mule.runtime.core.api.config.MuleProperties.MULE_HOME_DIRECTORY_PROPERTY;
 import static org.mule.runtime.module.embedded.impl.SerializationUtils.deserialize;
 import org.mule.runtime.api.exception.MuleException;
+import org.mule.runtime.container.api.MuleFoldersUtil;
 import org.mule.runtime.core.util.FileUtils;
 import org.mule.runtime.core.util.FilenameUtils;
 import org.mule.runtime.deployment.model.api.application.Application;
@@ -24,6 +25,7 @@ import org.mule.runtime.module.embedded.api.ContainerInfo;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -40,7 +42,7 @@ public class EmbeddedController {
     artifactInfo = deserialize(serializedAppInfo);
   }
 
-  public void start() throws IOException {
+  public void start() throws IOException, URISyntaxException {
     setUpEnvironment();
     createApplication();
 
@@ -48,9 +50,8 @@ public class EmbeddedController {
     application.start();
   }
 
-  private void createApplication() throws IOException {
+  private void createApplication() throws IOException, URISyntaxException {
     MuleArtifactResourcesRegistry artifactResourcesRegistry = new MuleArtifactResourcesRegistry.Builder().build();
-    ApplicationDescriptor applicationDescriptor = new ApplicationDescriptor("test");
     List<String> configResources = new ArrayList<>();
     for (URI uri : artifactInfo.getConfigs()) {
       configResources.add(uri.toURL().toString());
@@ -61,7 +62,7 @@ public class EmbeddedController {
     for (URL url : containerInfo.getServices()) {
       File originalFile = new File(url.getFile());
       File destinationFile = new File(servicesFolder, FilenameUtils.getName(url.getFile()));
-      FileUtils.copyFile(originalFile, destinationFile);
+      copyFile(originalFile, destinationFile);
     }
 
     try {
@@ -71,9 +72,19 @@ public class EmbeddedController {
     }
 
 
-    // TODO(pablo.kraan): embedded - need both configResources and absoluteConfigResources?
+    File applicationFolder = new File(MuleFoldersUtil.getAppsFolder(), "app");
+    applicationFolder.mkdirs();
+
+    File muleArtifactFolder = new File(applicationFolder, "META-INF/mule-artifact");
+    muleArtifactFolder.mkdirs();
+    File descriptorFile = new File(muleArtifactFolder, "mule-app.json");
+    File pomFile = new File(muleArtifactFolder, "pom.xml");
+    copyFile(new File(artifactInfo.getDescriptorFile().getFile()), descriptorFile);
+    copyFile(new File(artifactInfo.getPomFile().getFile()), pomFile);
+
+    ApplicationDescriptor applicationDescriptor =
+        artifactResourcesRegistry.getApplicationDescriptorFactory().create(applicationFolder);
     applicationDescriptor.setConfigResources(configResources.toArray(new String[0]));
-    applicationDescriptor.setArtifactLocation(createAppDir());
     applicationDescriptor.setAbsoluteResourcePaths(configResources.toArray(new String[0]));
 
     artifactResourcesRegistry.getDomainFactory().createArtifact(createDefaultDomainDir());

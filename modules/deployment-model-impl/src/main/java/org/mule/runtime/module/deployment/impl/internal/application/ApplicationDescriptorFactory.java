@@ -138,17 +138,18 @@ public class ApplicationDescriptorFactory implements ArtifactDescriptorFactory<A
   }
 
 
-  private ApplicationDescriptor loadFromJsonDescriptor(File pluginFolder, File mulePluginJsonFile) {
+  private ApplicationDescriptor loadFromJsonDescriptor(File applicationFolder, File mulePluginJsonFile) {
     final MulePluginModel mulePluginModel = getMulePluginJsonDescriber(mulePluginJsonFile);
 
     final ApplicationDescriptor descriptor = new ApplicationDescriptor(mulePluginModel.getName());
-    descriptor.setRootFolder(pluginFolder);
+    descriptor.setArtifactLocation(applicationFolder);
+    descriptor.setRootFolder(applicationFolder);
 
     mulePluginModel.getClassLoaderModelLoaderDescriptor().ifPresent(classLoaderModelLoaderDescriptor -> {
-      descriptor.setClassLoaderModel(getClassLoaderModel(pluginFolder, classLoaderModelLoaderDescriptor));
+      descriptor.setClassLoaderModel(getClassLoaderModel(applicationFolder, classLoaderModelLoaderDescriptor));
     });
 
-    descriptor.setBundleDescriptor(getBundleDescriptor(pluginFolder, mulePluginModel));
+    descriptor.setBundleDescriptor(getBundleDescriptor(applicationFolder, mulePluginModel));
 
     return descriptor;
   }

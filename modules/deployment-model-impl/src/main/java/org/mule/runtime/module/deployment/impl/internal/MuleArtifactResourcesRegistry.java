@@ -79,6 +79,7 @@ public class MuleArtifactResourcesRegistry {
   private final DefaultClassLoaderManager artifactClassLoaderManager;
   private final ModuleRepository moduleRepository;
   private final ApplicationClassLoaderBuilderFactory applicationClassLoaderBuilderFactory;
+  private final ApplicationDescriptorFactory applicationDescriptorFactory;
 
   /**
    * Builds a {@link MuleArtifactResourcesRegistry} instance
@@ -135,7 +136,7 @@ public class MuleArtifactResourcesRegistry {
         new ArtifactPluginDescriptorFactory();
     artifactPluginRepository = new DefaultArtifactPluginRepository(artifactPluginDescriptorFactory);
     artifactPluginDescriptorLoader = new ArtifactPluginDescriptorLoader(artifactPluginDescriptorFactory);
-    final ApplicationDescriptorFactory applicationDescriptorFactory =
+    applicationDescriptorFactory =
         new ApplicationDescriptorFactory(artifactPluginDescriptorLoader, artifactPluginRepository);
     DeployableArtifactClassLoaderFactory<ApplicationDescriptor> applicationClassLoaderFactory =
         trackDeployableArtifactClassLoaderFactory(new MuleApplicationClassLoaderFactory(new DefaultNativeLibraryFinderFactory()));
@@ -298,7 +299,7 @@ public class MuleArtifactResourcesRegistry {
     return artifactClassLoaderManager;
   }
 
-  public ApplicationClassLoaderBuilderFactory getApplicationClassLoaderBuilderFactory() {
-    return applicationClassLoaderBuilderFactory;
+  public ApplicationDescriptorFactory getApplicationDescriptorFactory() {
+    return applicationDescriptorFactory;
   }
 }

@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,14 +70,17 @@ public class AppMavenClassLoaderModelLoader extends MavenClassLoaderModelLoader 
   }
 
   protected void loadUrls(File pluginFolder, ClassLoaderModelBuilder classLoaderModelBuilder,
-                          PreorderNodeListGenerator nlg) {
+                          DependencyResult dependencyResult, PreorderNodeListGenerator nlg) {
     // Adding the exploded JAR root folder
     try {
       classLoaderModelBuilder.containing(new File(pluginFolder, "classes").toURL());
-      nlg.getArtifacts(false).stream()
-          .filter(artifact -> !isMulePlugin(artifact)).forEach(artifact -> {
-            // Adding all needed jar's file dependencies
-            classLoaderModelBuilder.containing(getUrl(pluginFolder, artifact.getFile()));
+      dependencyResult.getArtifactResults().stream()
+          .forEach(artifactResult -> {
+            try {
+              classLoaderModelBuilder.containing(artifactResult.getArtifact().getFile().toURL());
+            } catch (MalformedURLException e) {
+              throw new MuleRuntimeException(e);
+            }
           });
     } catch (MalformedURLException e) {
       throw new MuleRuntimeException(e);

@@ -24,7 +24,6 @@ import static org.mule.runtime.deployment.model.api.plugin.MavenClassLoaderConst
 import static org.mule.runtime.deployment.model.api.plugin.MavenClassLoaderConstants.MAVEN;
 import static org.mule.runtime.module.deployment.impl.internal.plugin.MavenUtils.getPomModel;
 import org.mule.runtime.api.deployment.meta.MuleArtifactLoaderDescriptor;
-import org.mule.runtime.core.config.bootstrap.ArtifactType;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.MavenClassLoaderConstants;
 import org.mule.runtime.deployment.model.internal.plugin.BundlePluginDependenciesResolver;
@@ -134,8 +133,11 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
     classLoaderModelBuilder
         .exportingPackages(new HashSet<>(getAttribute(attributes, EXPORTED_PACKAGES)))
         .exportingResources(new HashSet<>(getAttribute(attributes, EXPORTED_RESOURCES)));
-    final PreorderNodeListGenerator nlg = assemblyDependenciesFromPom(artifactFolder, model);
-    loadUrls(artifactFolder, classLoaderModelBuilder, nlg);
+    final DependencyResult dependencyResult = assemblyDependenciesFromPom(artifactFolder, model);
+    final PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
+    //This adds a ton of things that not always make sense
+    dependencyResult.getRoot().accept(nlg);
+    loadUrls(artifactFolder, classLoaderModelBuilder, dependencyResult, nlg);
     loadDependencies(classLoaderModelBuilder, nlg);
     return classLoaderModelBuilder.build();
   }
@@ -143,7 +145,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
   protected abstract void loadDependencies(ClassLoaderModelBuilder classLoaderModelBuilder, PreorderNodeListGenerator nlg);
 
   protected abstract void loadUrls(File pluginFolder, ClassLoaderModelBuilder classLoaderModelBuilder,
-                                   PreorderNodeListGenerator nlg);
+                                   DependencyResult dependencyResult, PreorderNodeListGenerator nlg);
 
   /**
    * Dependency validator to keep those that are Mule plugins. TODO(fernandezlautaro): MULE-11095 We will keep only Mule plugins
@@ -159,7 +161,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
         && MULE_PLUGIN_CLASSIFIER.equals(dependency.getArtifact().getClassifier());
   }
 
-  private PreorderNodeListGenerator assemblyDependenciesFromPom(File pluginFolder, Model model)
+  private DependencyResult assemblyDependenciesFromPom(File pluginFolder, Model model)
       throws InvalidDescriptorLoaderException {
 
     Artifact defaultArtifact = new DefaultArtifact(model.getGroupId(), model.getArtifactId(),
@@ -185,9 +187,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
       currentPluginDependenciesRequest.setRoot(collectResult.getRoot());
       currentPluginDependenciesRequest.setCollectRequest(currentPluginRequest);
       final DependencyResult dependencyResult = system.resolveDependencies(session, currentPluginDependenciesRequest);
-      final PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
-      dependencyResult.getRoot().accept(nlg);
-      return nlg;
+      return dependencyResult;
     } catch (DependencyResolutionException e) {
       DependencyNode node = e.getResult().getRoot();
       logUnresolvedArtifacts(node, e);
