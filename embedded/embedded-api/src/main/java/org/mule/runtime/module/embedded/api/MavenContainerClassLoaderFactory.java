@@ -17,6 +17,7 @@ import static org.eclipse.aether.util.artifact.ArtifactIdUtils.toId;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,7 +56,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 4.0
  */
-public class MavenContainerClassPathFactory {
+public class MavenContainerClassLoaderFactory {
 
   private static final String USER_HOME = "user.home";
   private static final String M2_REPO = "/.m2/repository";
@@ -77,14 +78,16 @@ public class MavenContainerClassPathFactory {
    * @param version Maven version. Not null.
    * @return a {@link List} of {@link URL}'s loaded with all its dependencies.
    */
-  public List<URL> createClassPath(String version) {
+  public ClassLoader create(String version) {
     Artifact defaultArtifact = new DefaultArtifact(CONTAINER_BOM_GROUP_ID, CONTAINER_BOM_ARTIFACT_ID,
                                                    null,
                                                    "pom",
                                                    version);
 
     final PreorderNodeListGenerator nlg = assemblyDependenciesForArtifact(defaultArtifact);
-    return loadUrls(nlg);
+    List<URL> urls = loadUrls(nlg);
+
+    return new URLClassLoader(urls.toArray(new URL[0]));
   }
 
   private List<URL> loadUrls(PreorderNodeListGenerator nlg) {
@@ -121,19 +124,19 @@ public class MavenContainerClassPathFactory {
       DependencyNode node = e.getResult().getRoot();
       logUnresolvedArtifacts(node, e);
       throw new RuntimeException(
-          String.format("There was an issue solving the dependencies for the container [%s]",
-                        artifact),
-          e);
+                                 String.format("There was an issue solving the dependencies for the container [%s]",
+                                               artifact),
+                                 e);
     } catch (DependencyCollectionException e) {
       throw new RuntimeException(
-          String.format("There was an issue resolving the dependency tree for the container [%s]",
-                        artifact),
-          e);
+                                 String.format("There was an issue resolving the dependency tree for the container [%s]",
+                                               artifact),
+                                 e);
     } catch (ArtifactDescriptorException e) {
       throw new RuntimeException(
-          String.format("There was an issue resolving the artifact descriptor for the container [%s]",
-                        artifact),
-          e);
+                                 String.format("There was an issue resolving the artifact descriptor for the container [%s]",
+                                               artifact),
+                                 e);
     }
   }
 
@@ -142,8 +145,8 @@ public class MavenContainerClassPathFactory {
       return file.toURI().toURL();
     } catch (MalformedURLException e) {
       throw new RuntimeException(format("There was an issue obtaining the URL for the dependency file [%s]",
-                                                         file.getAbsolutePath()),
-                                                  e);
+                                        file.getAbsolutePath()),
+                                 e);
     }
   }
 
@@ -195,8 +198,7 @@ public class MavenContainerClassPathFactory {
         .filter(artifactResult -> !artifactResult.getExceptions().isEmpty()).collect(toList());
 
     final List<String> patternInclusion =
-        artifactResults.stream().map(artifactResult ->
-                                         toId(artifactResult.getRequest().getArtifact())).collect(toList());
+        artifactResults.stream().map(artifactResult -> toId(artifactResult.getRequest().getArtifact())).collect(toList());
 
     PathRecordingDependencyVisitor visitor =
         new PathRecordingDependencyVisitor(new PatternInclusionsDependencyFilter(patternInclusion), node.getArtifact() != null);

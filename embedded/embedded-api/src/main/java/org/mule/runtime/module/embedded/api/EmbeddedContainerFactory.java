@@ -14,8 +14,7 @@ import java.lang.reflect.Method;
 public interface EmbeddedContainerFactory {
 
   static EmbeddedContainer create(String muleVersion, ArtifactInfo application) {
-    // TODO(pablo.kraan): embedded - use classloader built with aether
-    ClassLoader classLoader = EmbeddedContainerFactory.class.getClassLoader();
+    ClassLoader classLoader = new MavenContainerClassLoaderFactory().create(muleVersion);
 
     try {
       Class<?> controllerClass = classLoader.loadClass("org.mule.runtime.module.embedded.impl.EmbeddedController");

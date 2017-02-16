@@ -38,8 +38,7 @@ public class ArtifactInfo implements Serializable {
     return pomFile;
   }
 
-  public URL getContainerBaseFolder()
-  {
+  public URL getContainerBaseFolder() {
     return containerBaseFolder;
   }
 }
