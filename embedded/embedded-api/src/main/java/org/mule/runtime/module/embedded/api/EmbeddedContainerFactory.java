@@ -18,8 +18,12 @@ import java.util.List;
 
 public interface EmbeddedContainerFactory {
 
-  static EmbeddedContainer create(String muleVersion, ArtifactInfo application) {
-    ClassLoader parentClassLoader = new MavenContainerClassLoaderFactory().create(muleVersion);
+  static EmbeddedContainer create(String muleVersion, URL containerBaseFolder, ArtifactInfo application) {
+    // TODO(pablo.kraan): embedded - this is not a "factory". Rename/split it
+    MavenContainerClassLoaderFactory classLoaderFactory = new MavenContainerClassLoaderFactory();
+    ClassLoader parentClassLoader = classLoaderFactory.create(muleVersion);
+    List<URL> services = classLoaderFactory.getServices(muleVersion);
+    ContainerInfo containerInfo = new ContainerInfo(muleVersion, containerBaseFolder, services);
 
     // TODO(pablo.kraan): embedded - this adds the embedded impl jar.. but why the embedded api is already there?
     String m2BasePath = " ";
@@ -31,10 +35,13 @@ public interface EmbeddedContainerFactory {
     try {
       Class<?> controllerClass = classLoader.loadClass("org.mule.runtime.module.embedded.impl.EmbeddedController");
 
-      Constructor<?> constructor = controllerClass.getConstructor(byte[].class);
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream(512);
-      Serializer.serialize(application, outputStream);
-      Object o = constructor.newInstance(outputStream.toByteArray());
+      Constructor<?> constructor = controllerClass.getConstructor(byte[].class, byte[].class);
+      ByteArrayOutputStream containerOutputStream = new ByteArrayOutputStream(512);
+      Serializer.serialize(containerInfo, containerOutputStream);
+
+      ByteArrayOutputStream appOutputStream = new ByteArrayOutputStream(512);
+      Serializer.serialize(application, appOutputStream);
+      Object o = constructor.newInstance(containerOutputStream.toByteArray(), appOutputStream.toByteArray());
 
       return new EmbeddedContainer() {
 

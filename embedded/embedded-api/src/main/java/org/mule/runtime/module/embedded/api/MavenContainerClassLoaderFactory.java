@@ -95,7 +95,9 @@ public class MavenContainerClassLoaderFactory {
   public ClassLoader create(String version) {
     Artifact defaultArtifact = getContainerBomArtifact(version);
 
-    Predicate<Dependency> zipDependencyFilter = dependency -> !dependency.getArtifact().getExtension().equals("zip");
+    // TODO(pablo.kraan): embedded - find a bettwe way to filter recursively
+    Predicate<Dependency> zipDependencyFilter =
+        dependency -> !dependency.getArtifact().getArtifactId().equals("mule-services-all");
     PreorderNodeListGenerator nlg =
         assemblyDependenciesForArtifact(defaultArtifact, zipDependencyFilter);
     List<URL> urls = loadUrls(nlg);
@@ -115,9 +117,12 @@ public class MavenContainerClassLoaderFactory {
   public List<URL> getServices(String version) {
     Artifact defaultArtifact = getContainerBomArtifact(version);
 
+    // TODO(pablo.kraan): embedded - find a bettwe way to filter recursively
     final PreorderNodeListGenerator nlg =
-        assemblyDependenciesForArtifact(defaultArtifact, dependency -> dependency.getArtifact().getExtension().equals("zip"));
-    return loadUrls(nlg);
+        assemblyDependenciesForArtifact(defaultArtifact,
+                                        dependency -> dependency.getArtifact().getArtifactId().equals("mule-services-all"));
+    List<URL> urls = loadUrls(nlg);
+    return urls.stream().filter(u -> u.getFile().endsWith(".zip")).collect(toList());
   }
 
   private Artifact getContainerBomArtifact(String version) {

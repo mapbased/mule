@@ -17,13 +17,11 @@ public class ArtifactInfo implements Serializable {
   private final List<URI> configs;
   private final URL classesFolder;
   private final URL pomFile;
-  private final URL containerBaseFolder;
 
-  public ArtifactInfo(List<URI> configs, URL classesFolder, URL pomFile, URL containerBaseFolder) {
+  public ArtifactInfo(List<URI> configs, URL classesFolder, URL pomFile) {
     this.configs = configs;
     this.classesFolder = classesFolder;
     this.pomFile = pomFile;
-    this.containerBaseFolder = containerBaseFolder;
   }
 
   public List<URI> getConfigs() {
@@ -36,9 +34,5 @@ public class ArtifactInfo implements Serializable {
 
   public URL getPomFile() {
     return pomFile;
-  }
-
-  public URL getContainerBaseFolder() {
-    return containerBaseFolder;
   }
 }
