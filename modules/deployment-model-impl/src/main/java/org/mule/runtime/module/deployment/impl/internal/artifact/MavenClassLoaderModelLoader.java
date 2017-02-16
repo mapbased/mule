@@ -179,7 +179,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
       dependencies.stream()
           .forEach(dependency -> {
             if ("mule-plugin".equals(dependency.getArtifact().getClassifier())) {
-              dependenciesWithExclusions.add(dependency.setExclusions(asList(new Exclusion("*", "*", "8", "*"))));
+              dependenciesWithExclusions.add(dependency.setExclusions(asList(new Exclusion("*", "*", "*", "*"))));
             } else {
               dependenciesWithExclusions.add(dependency);
             }
@@ -232,7 +232,7 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
     session = newDefaultRepositorySystemSession();
     RepositorySystem repositorySystem = createRepositorySystem();
     session.setLocalRepositoryManager(repositorySystem
-        .newLocalRepositoryManager(session, new LocalRepository("/Users/pablokraan/.m2/repository")));
+        .newLocalRepositoryManager(session, new LocalRepository("/Users/pablolagreca/.m2/repository")));
     session.setOffline(false);
     session.setIgnoreArtifactDescriptorRepositories(true);
     session.setWorkspaceReader(new PomWorkspaceReader(pluginFolder, pluginArtifact));

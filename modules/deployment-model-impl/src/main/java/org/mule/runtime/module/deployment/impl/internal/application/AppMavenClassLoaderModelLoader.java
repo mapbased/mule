@@ -21,7 +21,6 @@ import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import org.slf4j.Logger;
@@ -76,6 +75,7 @@ public class AppMavenClassLoaderModelLoader extends MavenClassLoaderModelLoader 
     try {
       classLoaderModelBuilder.containing(new File(pluginFolder, "classes").toURL());
       dependencyResult.getArtifactResults().stream()
+          .filter(artifactResult -> !"mule-plugin".equals(artifactResult.getArtifact().getClassifier()))
           .forEach(artifactResult -> {
             try {
               classLoaderModelBuilder.containing(artifactResult.getArtifact().getFile().toURL());
