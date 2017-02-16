@@ -151,14 +151,12 @@ public class DefaultApplicationFactory implements ArtifactFactory<Application> {
 
     List<ArtifactPluginDescriptor> pluginDescriptors = new ArrayList<>();
     for (BundleDependency bundleDependency : descriptor.getClassLoaderModel().getDependencies()) {
-      if (bundleDependency.getDescriptor().getClassifier().equals("mule-plugin")) {
-        // TODO(pablo.kraan): embedded - get the file form the app descriptor
-        File pluginFile = new File("zaraza");
-        File tempFolder = File.createTempFile("", FilenameUtils.getBaseName(pluginFile.getName()));
+      if (bundleDependency.getDescriptor().getClassifier().get().equals("mule-plugin")) {
+        File pluginZip = new File(bundleDependency.getBundleUrl().getFile());
+        File tempFolder = File.createTempFile("test", FilenameUtils.getBaseName(pluginZip.getName()));
         tempFolder.delete();
         tempFolder.mkdir();
-
-        pluginDescriptors.add(pluginDescriptorLoader.load(pluginFile, tempFolder));
+        pluginDescriptors.add(pluginDescriptorLoader.load(pluginZip, tempFolder));
       }
     }
     return pluginDescriptors;
