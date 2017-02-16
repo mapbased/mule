@@ -105,6 +105,8 @@
         <module>extensions</module>
         <module>compatibility</module>
         <module>bom</module>
+        <module>embeddedcl</module>
+        <module>embedded</module>
     </modules>
 
     <properties>
