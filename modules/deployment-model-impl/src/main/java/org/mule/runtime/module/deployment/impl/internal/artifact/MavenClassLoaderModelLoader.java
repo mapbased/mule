@@ -138,11 +138,12 @@ public abstract class MavenClassLoaderModelLoader implements ClassLoaderModelLoa
     // This adds a ton of things that not always make sense
     dependencyResult.getRoot().accept(nlg);
     loadUrls(artifactFolder, classLoaderModelBuilder, dependencyResult, nlg);
-    loadDependencies(classLoaderModelBuilder, nlg);
+    loadDependencies(classLoaderModelBuilder, dependencyResult, nlg);
     return classLoaderModelBuilder.build();
   }
 
-  protected abstract void loadDependencies(ClassLoaderModelBuilder classLoaderModelBuilder, PreorderNodeListGenerator nlg);
+  protected abstract void loadDependencies(ClassLoaderModelBuilder classLoaderModelBuilder, DependencyResult dependencyResult,
+                                           PreorderNodeListGenerator nlg);
 
   protected abstract void loadUrls(File pluginFolder, ClassLoaderModelBuilder classLoaderModelBuilder,
                                    DependencyResult dependencyResult, PreorderNodeListGenerator nlg);

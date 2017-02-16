@@ -7,8 +7,11 @@
 package org.mule.runtime.module.deployment.impl.internal.plugin;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.mule.runtime.deployment.model.api.plugin.MavenClassLoaderConstants.MAVEN;
+import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.core.config.bootstrap.ArtifactType;
+import org.mule.runtime.core.util.StringUtils;
 import org.mule.runtime.module.artifact.descriptor.ArtifactDescriptorCreateException;
 import org.mule.runtime.module.artifact.descriptor.BundleDependency;
 import org.mule.runtime.module.artifact.descriptor.BundleDescriptor;
@@ -23,7 +26,6 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 import org.slf4j.Logger;
@@ -47,24 +49,31 @@ public class PluginMavenClassLoaderModelLoader extends MavenClassLoaderModelLoad
     return MAVEN;
   }
 
-  protected void loadDependencies(ClassLoaderModelBuilder classLoaderModelBuilder, PreorderNodeListGenerator nlg) {
+  protected void loadDependencies(ClassLoaderModelBuilder classLoaderModelBuilder, DependencyResult dependencyResult,
+                                  PreorderNodeListGenerator nlg) {
     // Looking for all Mule plugin dependencies
     final Set<BundleDependency> plugins = new HashSet<>();
-    nlg.getDependencies(true).stream()
-        .filter(this::isMulePlugin)
-        .map(Dependency::getArtifact)
-        .forEach(artifact -> {
-          final BundleDescriptor.Builder bundleDescriptorBuilder = new BundleDescriptor.Builder()
-              .setArtifactId(artifact.getArtifactId())
-              .setGroupId(artifact.getGroupId())
-              .setVersion(artifact.getVersion())
-              .setType(artifact.getExtension())
-              .setClassifier(artifact.getClassifier());
+    dependencyResult.getArtifactResults().stream()
+        .forEach(dependency -> {
+          BundleDescriptor.Builder builder = new BundleDescriptor.Builder()
+              .setArtifactId(dependency.getArtifact().getArtifactId())
+              .setGroupId(dependency.getArtifact().getGroupId())
+              .setVersion(dependency.getArtifact().getVersion())
+              .setType(dependency.getArtifact().getExtension());
+          if (!isEmpty(dependency.getArtifact().getClassifier())) {
+            builder = builder
+                .setClassifier(dependency.getArtifact().getClassifier());
+          }
 
-          plugins.add(new BundleDependency.Builder()
-              .setDescriptor(bundleDescriptorBuilder.build())
-              .setScope(BundleScope.COMPILE)
-              .build());
+          try {
+            plugins.add(new BundleDependency.Builder()
+                .setDescriptor(builder.build())
+                .setScope(BundleScope.COMPILE)
+                .setBundleUrl(dependency.getArtifact().getFile().toURL())
+                .build());
+          } catch (MalformedURLException e) {
+            throw new MuleRuntimeException(e);
+          }
         });
     classLoaderModelBuilder.dependingOn(plugins);
   }

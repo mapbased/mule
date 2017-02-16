@@ -44,7 +44,8 @@ public class AppMavenClassLoaderModelLoader extends MavenClassLoaderModelLoader 
     return MAVEN;
   }
 
-  protected void loadDependencies(ClassLoaderModelBuilder classLoaderModelBuilder, PreorderNodeListGenerator nlg) {
+  protected void loadDependencies(ClassLoaderModelBuilder classLoaderModelBuilder, DependencyResult dependencyResult,
+                                  PreorderNodeListGenerator nlg) {
     final Set<BundleDependency> plugins = new HashSet<>();
     nlg.getDependencies(true).stream()
         .filter(this::isMulePlugin)
