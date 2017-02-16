@@ -75,7 +75,7 @@ public class MavenContainerClassLoaderFactory {
   private static final String USER_HOME = "user.home";
   private static final String M2_REPO = "/.m2/repository";
   private static final String CONTAINER_BOM_GROUP_ID = "org.mule";
-  private static final String CONTAINER_BOM_ARTIFACT_ID = "mule-bom";
+  private static final String CONTAINER_BOM_ARTIFACT_ID = "mule-runtime-impl-bom";
   public static final String MULE_SERVICE = "mule-service";
 
   private static String userHome = getProperty(USER_HOME);
@@ -95,9 +95,19 @@ public class MavenContainerClassLoaderFactory {
   public ClassLoader create(String version) {
     Artifact defaultArtifact = getContainerBomArtifact(version);
 
-    final PreorderNodeListGenerator nlg =
-        assemblyDependenciesForArtifact(defaultArtifact, dependency -> !dependency.getArtifact().getExtension().equals("zip"));
+    Predicate<Dependency> zipDependencyFilter = dependency -> !dependency.getArtifact().getExtension().equals("zip");
+    PreorderNodeListGenerator nlg =
+        assemblyDependenciesForArtifact(defaultArtifact, zipDependencyFilter);
     List<URL> urls = loadUrls(nlg);
+
+    // TODO(pablo.kraan): embedded - need mule-module-embedded-impl jar, not just the dependencies
+    //Artifact embeddedArtifact = new DefaultArtifact("org.mule", "mule-module-embedded-impl",
+    //                                                null,
+    //                                                "jar",
+    //                                                version);
+    //nlg = assemblyDependenciesForArtifact(embeddedArtifact, zipDependencyFilter);
+    //List<URL> embeddedUrls = loadUrls(nlg);
+    //urls.addAll(embeddedUrls);
 
     return new URLClassLoader(urls.toArray(new URL[0]));
   }
