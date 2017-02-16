@@ -18,6 +18,7 @@ import static org.mule.runtime.container.api.MuleFoldersUtil.PLUGINS_FOLDER;
 import static org.mule.runtime.core.config.bootstrap.ArtifactType.APP;
 import static org.mule.runtime.deployment.model.api.application.ApplicationDescriptor.DEFAULT_APP_PROPERTIES_RESOURCE;
 import static org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor.MULE_ARTIFACT_FOLDER;
+import static org.mule.runtime.module.artifact.descriptor.BundleScope.COMPILE;
 import static org.mule.runtime.module.deployment.impl.internal.artifact.ArtifactFactoryUtils.getDeploymentFile;
 import org.mule.runtime.api.deployment.meta.MuleArtifactLoaderDescriptor;
 import org.mule.runtime.api.deployment.meta.MulePluginModel;
@@ -233,8 +234,11 @@ public class ApplicationDescriptorFactory implements ArtifactDescriptorFactory<A
       classLoaderModelBuilder.exportingPackages(jarInfo.getPackages())
           .exportingResources(jarInfo.getResources());
 
+      Set<BundleDependency> plugins = getPluginDependencies(artifactFolder);
+      classLoaderModelBuilder.dependingOn(plugins);
       ClassLoaderModel classLoaderModel = classLoaderModelBuilder.build();
       desc.setClassLoaderModel(classLoaderModel);
+
 
       desc.setPlugins(createArtifactPluginDescriptors(classLoaderModel));
     } catch (IOException e) {
@@ -242,6 +246,23 @@ public class ApplicationDescriptorFactory implements ArtifactDescriptorFactory<A
     }
 
     return desc;
+  }
+
+  private Set<BundleDependency> getPluginDependencies(File artifactFolder) throws MalformedURLException {
+    File pluginsFolders = new File(artifactFolder, "plugins");
+    File[] files = pluginsFolders.listFiles();
+    Set<BundleDependency> plugins = new HashSet<>();
+    if (!pluginsFolders.exists()) {
+      return plugins;
+    }
+    for (File file : files) {
+      // TODO pablolagreca figure out what to do here
+      plugins.add(new BundleDependency.Builder().setBundleUrl(file.toURL()).setScope(COMPILE)
+          .setDescriptor(new BundleDescriptor.Builder().setArtifactId("useless").setGroupId("useless").setVersion("useless")
+              .setClassifier("mule-plugin").build())
+          .build());
+    }
+    return plugins;
   }
 
   private Set<ArtifactPluginDescriptor> createArtifactPluginDescriptors(ClassLoaderModel classLoaderModel) throws IOException {

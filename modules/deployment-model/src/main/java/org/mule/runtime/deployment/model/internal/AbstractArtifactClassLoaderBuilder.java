@@ -126,8 +126,8 @@ public abstract class AbstractArtifactClassLoaderBuilder<T extends AbstractArtif
     List<ArtifactPluginDescriptor> pluginDescriptors = createContainerApplicationPlugins();
     pluginDescriptors.addAll(artifactPluginDescriptors);
     // TODO pablolagreca fix this
-    // List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors = pluginDependenciesResolver.resolve(pluginDescriptors);
-    List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors = pluginDescriptors;
+    List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors = pluginDependenciesResolver.resolve(pluginDescriptors);
+    // List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors = pluginDescriptors;
 
     final List<ArtifactClassLoader> pluginClassLoaders =
         createPluginClassLoaders(artifactId, regionClassLoader, effectiveArtifactPluginDescriptors);
