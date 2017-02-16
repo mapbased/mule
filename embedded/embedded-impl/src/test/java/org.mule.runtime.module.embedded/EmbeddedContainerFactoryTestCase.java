@@ -37,6 +37,7 @@ public class EmbeddedContainerFactoryTestCase {
 
     // TODO(pablo.kraan): embedded - finish this test
     embeddedContainer.start();
+    Thread.sleep(5000);
     embeddedContainer.stop();
   }
 
