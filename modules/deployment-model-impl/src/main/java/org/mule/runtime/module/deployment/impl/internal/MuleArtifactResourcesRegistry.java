@@ -7,10 +7,10 @@
 package org.mule.runtime.module.deployment.impl.internal;
 
 import static org.mule.runtime.api.util.Preconditions.checkArgument;
+import org.mule.runtime.container.api.ModuleRepository;
 import org.mule.runtime.container.internal.ContainerClassLoaderFactory;
 import org.mule.runtime.container.internal.ContainerModuleDiscoverer;
 import org.mule.runtime.container.internal.DefaultModuleRepository;
-import org.mule.runtime.container.api.ModuleRepository;
 import org.mule.runtime.deployment.model.api.application.Application;
 import org.mule.runtime.deployment.model.api.application.ApplicationDescriptor;
 import org.mule.runtime.deployment.model.api.domain.DomainDescriptor;
@@ -271,8 +271,7 @@ public class MuleArtifactResourcesRegistry {
     return artifactClassLoaderManager;
   }
 
-  public ApplicationClassLoaderBuilderFactory getApplicationClassLoaderBuilderFactory()
-  {
+  public ApplicationClassLoaderBuilderFactory getApplicationClassLoaderBuilderFactory() {
     return applicationClassLoaderBuilderFactory;
   }
 }
