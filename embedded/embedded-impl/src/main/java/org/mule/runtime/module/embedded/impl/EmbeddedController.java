@@ -6,16 +6,44 @@
  */
 package org.mule.runtime.module.embedded.impl;
 
+import static org.mule.runtime.module.embedded.impl.SerializationUtils.deserialize;
+import org.mule.runtime.deployment.model.api.application.Application;
+import org.mule.runtime.deployment.model.api.application.ApplicationDescriptor;
+import org.mule.runtime.module.deployment.impl.internal.MuleArtifactResourcesRegistry;
+import org.mule.runtime.module.embedded.api.ArtifactInfo;
+
+import java.io.File;
+import java.io.IOException;
+
 public class EmbeddedController {
 
-  public EmbeddedController(byte[] configuration) {}
+  private ArtifactInfo artifactInfo;
+  private Application application;
 
-  public void start() {
+  public EmbeddedController(byte[] configuration) throws IOException, ClassNotFoundException {
+    artifactInfo = deserialize(configuration);
+  }
 
+  public void start() throws IOException {
+    MuleArtifactResourcesRegistry artifactResourcesRegistry = new MuleArtifactResourcesRegistry.Builder().build();
+    ApplicationDescriptor applicationDescriptor = null;
+
+    artifactResourcesRegistry.getDomainFactory().createArtifact(createDefaultDomainDir());
+
+    application = artifactResourcesRegistry.getApplicationFactory().createAppFrom(applicationDescriptor);
+    application.start();
+  }
+
+  private File createDefaultDomainDir() {
+    File defaultDomainFolder = new File(new File("domains"), "default");
+    if (!defaultDomainFolder.mkdirs()) {
+      throw new RuntimeException("Could not create default domain directory in " + defaultDomainFolder.getAbsolutePath());
+    }
+    return defaultDomainFolder;
   }
 
   public void stop() {
-
+    application.stop();
   }
 
 }

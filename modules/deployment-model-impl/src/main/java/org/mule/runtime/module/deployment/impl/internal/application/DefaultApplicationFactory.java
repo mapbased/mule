@@ -97,7 +97,7 @@ public class DefaultApplicationFactory implements ArtifactFactory<Application> {
     return MuleContainerBootstrapUtils.getMuleAppsDir();
   }
 
-  protected Application createAppFrom(ApplicationDescriptor descriptor) throws IOException {
+  public Application createAppFrom(ApplicationDescriptor descriptor) throws IOException {
     Domain domain = domainRepository.getDomain(descriptor.getDomain());
 
     if (domain == null) {
