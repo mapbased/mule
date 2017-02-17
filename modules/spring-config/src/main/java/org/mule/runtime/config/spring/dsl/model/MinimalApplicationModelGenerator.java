@@ -6,6 +6,7 @@
  */
 package org.mule.runtime.config.spring.dsl.model;
 
+import static com.google.common.collect.Lists.reverse;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
@@ -17,9 +18,12 @@ import org.mule.runtime.core.api.processor.Processor;
 import org.mule.runtime.core.api.source.MessageSource;
 import org.mule.runtime.dsl.api.component.ComponentBuildingDefinition;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -78,9 +82,7 @@ public class MinimalApplicationModelGenerator {
    */
   public ApplicationModel getMinimalModelByName(String name) {
     ComponentModel requestedComponentModel = findRequiredComponentModel(name);
-    final Set<String> otherRequiredGlobalComponents = resolveComponentDependencies(requestedComponentModel);
-    otherRequiredGlobalComponents.add(name);
-    Set<String> allRequiredComponentModels = findComponentModelsDependencies(otherRequiredGlobalComponents);
+    Set<String> allRequiredComponentModels = resolveComponentModelDependencies(name, requestedComponentModel);
     Iterator<ComponentModel> iterator = applicationModel.getRootComponentModel().getInnerComponents().iterator();
     while (iterator.hasNext()) {
       ComponentModel componentModel = iterator.next();
@@ -89,6 +91,82 @@ public class MinimalApplicationModelGenerator {
       }
     }
     return applicationModel;
+  }
+
+  public List<ComponentModel> resolveComponentModelDependencies() {
+    Map<ComponentModel, Set<String>> componentModelDependencies = new HashMap<>();
+    applicationModel.executeOnEveryMuleComponentTree(componentModel -> {
+      if (componentModel.getNameAttribute() != null && componentModel.isEnabled()) {
+        componentModelDependencies.put(componentModel, resolveComponentModelDependencies(null, componentModel));
+      }
+    });
+
+    List<ComponentModel> resolved = new LinkedList<>();
+    List<ComponentModel> unresolved = new LinkedList<>(componentModelDependencies.keySet());
+
+    boolean continueResolution = true;
+
+    while (continueResolution) {
+      int initialResolvedCount = resolved.size();
+
+      List<ComponentModel> pendingUnresolved = new LinkedList<>();
+
+      for (ComponentModel unresolvedComponent : unresolved) {
+        if (isResolvedComponent(unresolvedComponent, resolved, componentModelDependencies)) {
+          resolved.add(unresolvedComponent);
+        } else {
+          pendingUnresolved.add(unresolvedComponent);
+        }
+      }
+
+      unresolved = pendingUnresolved;
+
+      continueResolution = resolved.size() > initialResolvedCount;
+    }
+
+    return reverse(resolved);
+  }
+
+  private boolean isResolvedComponent(ComponentModel componentModel, List<ComponentModel> resolved,
+                                      Map<ComponentModel, Set<String>> componentModelDependencies) {
+    boolean isResolved = componentModelDependencies.get(componentModel).isEmpty();
+
+    if (!isResolved && hasComponentModelDependenciesResolved(componentModelDependencies.get(componentModel), resolved)) {
+      isResolved = true;
+    }
+
+    return isResolved;
+  }
+
+  private boolean hasComponentModelDependenciesResolved(Set<String> componentDependencies,
+                                                        List<ComponentModel> resolved) {
+    boolean resolvedDependency = true;
+
+    for (String dependency : componentDependencies) {
+      if (findComponent(dependency, resolved) == null) {
+        resolvedDependency = false;
+        break;
+      }
+    }
+
+    return resolvedDependency;
+  }
+
+  private ComponentModel findComponent(String name, List<ComponentModel> resolved) {
+    for (ComponentModel resolvedComponent : resolved) {
+      if (resolvedComponent.getNameAttribute().equals(name)) {
+        return resolvedComponent;
+      }
+    }
+    return null;
+  }
+
+  private Set<String> resolveComponentModelDependencies(String name, ComponentModel componentModel) {
+    final Set<String> otherRequiredGlobalComponents = resolveComponentDependencies(componentModel);
+    if (name != null) {
+      otherRequiredGlobalComponents.add(name);
+    }
+    return findComponentModelsDependencies(otherRequiredGlobalComponents);
   }
 
   private ComponentModel filterFlowModelParts(ComponentModel flowModel, String[] parts) {
@@ -161,6 +239,9 @@ public class MinimalApplicationModelGenerator {
   }
 
   private Set<String> resolveComponentDependencies(ComponentModel requestedComponentModel) {
+    if (!requestedComponentModel.isEnabled()) {
+      return new HashSet<>();
+    }
     Set<String> otherDependencies = new HashSet<>();
     requestedComponentModel.getInnerComponents()
         .stream().forEach(childComponent -> {
