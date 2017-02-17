@@ -20,6 +20,7 @@ import org.mule.runtime.deployment.model.api.domain.Domain;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPlugin;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginRepository;
+import org.mule.runtime.deployment.model.internal.application.ApplicationClassLoaderBuilder;
 import org.mule.runtime.module.artifact.classloader.ClassLoaderRepository;
 import org.mule.runtime.module.artifact.classloader.MuleDeployableArtifactClassLoader;
 import org.mule.runtime.module.artifact.descriptor.BundleDependency;
@@ -111,8 +112,9 @@ public class DefaultApplicationFactory implements ArtifactFactory<Application> {
     }
     List<ArtifactPluginDescriptor> pluginDescriptors = createArtifactPluginDescriptors(descriptor);
 
+    ApplicationClassLoaderBuilder artifactClassLoaderBuilder = applicationClassLoaderBuilderFactory.createArtifactClassLoaderBuilder();
     MuleDeployableArtifactClassLoader applicationClassLoader =
-        applicationClassLoaderBuilderFactory.createArtifactClassLoaderBuilder()
+        artifactClassLoaderBuilder
             .setDomain(domain).addArtifactPluginDescriptors(pluginDescriptors.toArray(new ArtifactPluginDescriptor[0]))
             .setArtifactId(descriptor.getName()).setArtifactDescriptor(descriptor).build();
 
@@ -120,7 +122,7 @@ public class DefaultApplicationFactory implements ArtifactFactory<Application> {
         concat(artifactPluginRepository.getContainerArtifactPluginDescriptors().stream(), descriptor.getPlugins().stream())
             .collect(toList());
 
-    List<ArtifactPlugin> artifactPlugins = createArtifactPluginList(applicationClassLoader, applicationPluginDescriptors);
+    List<ArtifactPlugin> artifactPlugins = createArtifactPluginList(applicationClassLoader, artifactClassLoaderBuilder.getEffectiveArtifactPluginDescriptors());
 
     MuleApplicationPolicyProvider applicationPolicyProvider =
         new MuleApplicationPolicyProvider(

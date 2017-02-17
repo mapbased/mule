@@ -49,6 +49,8 @@ public abstract class AbstractArtifactClassLoaderBuilder<T extends AbstractArtif
   protected ArtifactDescriptor artifactDescriptor;
   private ArtifactClassLoader parentClassLoader;
   protected List<ArtifactClassLoader> artifactPluginClassLoaders = new ArrayList<>();
+  //TODO this msut be generated outside
+  private List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors;
 
   /**
    * Creates an {@link AbstractArtifactClassLoaderBuilder}.
@@ -125,9 +127,7 @@ public abstract class AbstractArtifactClassLoaderBuilder<T extends AbstractArtif
 
     List<ArtifactPluginDescriptor> pluginDescriptors = createContainerApplicationPlugins();
     pluginDescriptors.addAll(artifactPluginDescriptors);
-    // TODO pablolagreca fix this
-    List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors = pluginDependenciesResolver.resolve(pluginDescriptors);
-    // List<ArtifactPluginDescriptor> effectiveArtifactPluginDescriptors = pluginDescriptors;
+    effectiveArtifactPluginDescriptors = pluginDependenciesResolver.resolve(pluginDescriptors);
 
     final List<ArtifactClassLoader> pluginClassLoaders =
         createPluginClassLoaders(artifactId, regionClassLoader, effectiveArtifactPluginDescriptors);
@@ -210,5 +210,10 @@ public abstract class AbstractArtifactClassLoaderBuilder<T extends AbstractArtif
     checkArgument(!isEmpty(pluginName), "pluginName cannot be empty");
 
     return parentArtifactId + "/plugin/" + pluginName;
+  }
+
+  public List<ArtifactPluginDescriptor> getEffectiveArtifactPluginDescriptors()
+  {
+    return effectiveArtifactPluginDescriptors;
   }
 }

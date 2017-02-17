@@ -9,6 +9,9 @@ package org.mule.runtime.deployment.model.internal.plugin;
 
 import static org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor.MULE_PLUGIN_CLASSIFIER;
 import static org.mule.runtime.module.artifact.descriptor.BundleDescriptorUtils.isCompatibleVersion;
+import org.mule.runtime.api.exception.MuleRuntimeException;
+import org.mule.runtime.core.util.FileUtils;
+import org.mule.runtime.core.util.UUID;
 import org.mule.runtime.deployment.model.api.artifact.DependenciesProvider;
 import org.mule.runtime.deployment.model.api.artifact.DependencyNotFoundException;
 import org.mule.runtime.deployment.model.api.plugin.ArtifactPluginDescriptor;
@@ -19,6 +22,7 @@ import org.mule.runtime.module.artifact.descriptor.ClassLoaderModel;
 import org.mule.runtime.module.artifact.descriptor.ClassLoaderModel.ClassLoaderModelBuilder;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -148,11 +152,22 @@ public class BundlePluginDependenciesResolver implements PluginDependenciesResol
                   File mulePluginLocation;
                   // TODO pablolagreca review this
                   if (dependency.getBundleUrl() != null) {
-                    mulePluginLocation = new File(dependency.getBundleUrl().getFile());
+                    File pluginJarLocation = new File(dependency.getBundleUrl().getFile());
+                    try
+                    {
+                      mulePluginLocation = new File("temp" + UUID.getUUID());
+                      FileUtils.unzip(pluginJarLocation, mulePluginLocation);
+                    }
+                    catch (IOException e)
+                    {
+                      throw new MuleRuntimeException(e);
+                    }
                   } else {
                     mulePluginLocation = dependenciesProvider.resolve(dependency.getDescriptor());
                   }
-                  foundDependencies.add(artifactDescriptorFactory.create(new File(mulePluginLocation.toURI())));
+                  ArtifactPluginDescriptor artifactPluginDescriptor = artifactDescriptorFactory.create(mulePluginLocation);
+                  artifactPluginDescriptor.setBundleDescriptor(dependency.getDescriptor());
+                  foundDependencies.add(artifactPluginDescriptor);
                   visited.add(dependency.getDescriptor());
                 }
               }));
